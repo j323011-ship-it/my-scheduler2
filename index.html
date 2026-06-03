@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>スケジュール管理</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="container">
+
+        <!-- 左側：タスクリスト -->
+        <div id="task-panel">
+            <h2>📋 タスクリスト</h2>
+
+            <!-- タスク入力エリア -->
+            <div id="task-input-area">
+                <input type="text" id="task-input" placeholder="タスクを入力...">
+                <input type="date" id="task-date">
+                <select id="task-status">
+                    <option value="Next Up">Next Up</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Done">Done</option>
+                </select>
+                <select id="task-category">
+                    <option value="仕事">仕事</option>
+                    <option value="学習">学習</option>
+                    <option value="プライベート">プライベート</option>
+                </select>
+                <button id="add-task">追加</button>
+            </div>
+
+            <!-- フィルター -->
+            <div id="filter-area">
+                <button class="filter-btn active" data-filter="all">すべて</button>
+                <button class="filter-btn" data-filter="Next Up">Next Up</button>
+                <button class="filter-btn" data-filter="In Progress">In Progress</button>
+                <button class="filter-btn" data-filter="Done">Done</button>
+            </div>
+
+            <!-- タスク一覧 -->
+            <ul id="task-list"></ul>
+        </div>
+
+        <!-- 右側：カレンダー -->
+        <div id="calendar-panel">
+            <div id="calendar-header">
+                <button id="prev-month">＜</button>
+                <span id="calendar-title"></span>
+                <button id="next-month">＞</button>
+            </div>
+            <div id="calendar"></div>
+        </div>
+
+    </div>
+
+    <!-- 24時間表モーダル -->
+    <div id="day-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-date-title"></h2>
+                <button id="modal-close">✕</button>
+            </div>
+            <div class="modal-body">
+                <!-- 左：24時間表 -->
+                <div id="hourly-panel">
+                    <h3>🕐 時間割</h3>
+                    <div id="hourly-table"></div>
+                </div>
+                <!-- 右：その日のタスク -->
+                <div id="day-task-panel">
+                    <h3>📋 この日のタスク</h3>
+                    <ul id="day-task-list"></ul>
+                    <div id="day-task-input-area">
+                        <input type="text" id="day-task-input" placeholder="タスクを追加...">
+                        <button id="day-add-task">追加</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

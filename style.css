@@ -1,0 +1,535 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+ 
+body {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    background-color: #f0f2f5;
+    color: #333;
+    height: 100vh;
+    overflow: hidden;
+}
+ 
+#container {
+    display: flex;
+    height: 100vh;
+    gap: 0;
+}
+ 
+/* ===== 左側：タスクパネル ===== */
+#task-panel {
+    width: 360px;
+    min-width: 320px;
+    background-color: #1e1e2e;
+    color: #cdd6f4;
+    display: flex;
+    flex-direction: column;
+    padding: 24px 20px;
+    overflow-y: auto;
+    gap: 16px;
+}
+ 
+#task-panel h2 {
+    font-size: 20px;
+    font-weight: 700;
+    color: #cba6f7;
+    letter-spacing: 0.05em;
+}
+ 
+/* 入力エリア */
+#task-input-area {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    background: #313244;
+    padding: 16px;
+    border-radius: 12px;
+}
+ 
+#task-input-area input[type="text"],
+#task-input-area input[type="date"],
+#task-input-area select {
+    width: 100%;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid #45475a;
+    background: #1e1e2e;
+    color: #cdd6f4;
+    font-size: 14px;
+    outline: none;
+    transition: border 0.2s;
+}
+ 
+#task-input-area input:focus,
+#task-input-area select:focus {
+    border-color: #cba6f7;
+}
+ 
+#add-task {
+    padding: 10px;
+    background: #cba6f7;
+    color: #1e1e2e;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+ 
+#add-task:hover {
+    background: #b4befe;
+}
+ 
+/* フィルターボタン */
+#filter-area {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+ 
+.filter-btn {
+    padding: 5px 12px;
+    border-radius: 20px;
+    border: 1px solid #45475a;
+    background: transparent;
+    color: #a6adc8;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+ 
+.filter-btn.active,
+.filter-btn:hover {
+    background: #cba6f7;
+    color: #1e1e2e;
+    border-color: #cba6f7;
+    font-weight: 700;
+}
+ 
+/* タスクリスト */
+#task-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    overflow-y: auto;
+}
+ 
+.task-item {
+    background: #313244;
+    border-radius: 10px;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    transition: opacity 0.2s;
+}
+ 
+.task-item.done {
+    opacity: 0.5;
+}
+ 
+.task-item .task-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+ 
+.task-item .task-name {
+    font-size: 14px;
+    font-weight: 600;
+    flex: 1;
+    word-break: break-all;
+}
+ 
+.task-item.done .task-name {
+    text-decoration: line-through;
+    color: #6c7086;
+}
+ 
+.task-item .delete-btn {
+    background: transparent;
+    border: none;
+    color: #f38ba8;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 2px 4px;
+    border-radius: 4px;
+    transition: background 0.2s;
+}
+ 
+.task-item .delete-btn:hover {
+    background: #45475a;
+}
+ 
+.task-item .task-meta {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+ 
+.task-item .task-priority {
+    font-size: 12px;
+}
+ 
+.task-item .task-category {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: #45475a;
+    color: #cdd6f4;
+}
+ 
+.task-item .task-date-label {
+    font-size: 11px;
+    color: #a6adc8;
+}
+ 
+.task-item .task-status-select {
+    font-size: 11px;
+    padding: 2px 6px;
+    border-radius: 6px;
+    border: 1px solid #45475a;
+    background: #1e1e2e;
+    color: #cdd6f4;
+    cursor: pointer;
+    outline: none;
+}
+ 
+/* ===== 右側：カレンダーパネル ===== */
+#calendar-panel {
+    flex: 1;
+    background: #ffffff;
+    display: flex;
+    flex-direction: column;
+    padding: 24px;
+    overflow-y: auto;
+}
+ 
+#calendar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+ 
+#calendar-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: #1e1e2e;
+}
+ 
+#prev-month, #next-month {
+    background: #f0f2f5;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-size: 16px;
+    cursor: pointer;
+    color: #1e1e2e;
+    transition: background 0.2s;
+}
+ 
+#prev-month:hover, #next-month:hover {
+    background: #cba6f7;
+    color: white;
+}
+ 
+/* カレンダーテーブル */
+#calendar table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+ 
+#calendar th {
+    text-align: center;
+    padding: 10px 0;
+    font-size: 13px;
+    font-weight: 700;
+    color: #6c7086;
+    border-bottom: 2px solid #f0f2f5;
+}
+ 
+#calendar th:first-child { color: #f38ba8; }
+#calendar th:last-child { color: #89b4fa; }
+ 
+#calendar td {
+    border: 1px solid #f0f2f5;
+    height: 90px;
+    vertical-align: top;
+    padding: 6px 8px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.15s;
+    position: relative;
+}
+ 
+#calendar td:hover {
+    background: #f5f0ff;
+}
+ 
+#calendar td.today {
+    background: #f0f0ff;
+}
+ 
+#calendar td.today .day-number {
+    background: #cba6f7;
+    color: white;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+}
+ 
+#calendar td.sunday .day-number { color: #f38ba8; }
+#calendar td.saturday .day-number { color: #89b4fa; }
+ 
+.day-number {
+    font-size: 13px;
+    font-weight: 600;
+    color: #1e1e2e;
+    margin-bottom: 4px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+ 
+.day-tasks {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+ 
+.day-task-dot {
+    font-size: 10px;
+    background: #cba6f7;
+    color: #1e1e2e;
+    border-radius: 4px;
+    padding: 1px 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+ 
+/* スクロールバー */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #45475a; border-radius: 3px; }
+ 
+/* ===== 24時間表モーダル ===== */
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+ 
+.modal-overlay.hidden {
+    display: none;
+}
+ 
+.modal-content {
+    background: #1e1e2e;
+    border-radius: 16px;
+    width: 90vw;
+    max-width: 900px;
+    height: 85vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+ 
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 24px;
+    border-bottom: 1px solid #313244;
+}
+ 
+.modal-header h2 {
+    color: #cba6f7;
+    font-size: 18px;
+}
+ 
+#modal-close {
+    background: #313244;
+    border: none;
+    color: #cdd6f4;
+    font-size: 16px;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+ 
+#modal-close:hover {
+    background: #f38ba8;
+    color: white;
+}
+ 
+.modal-body {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+ 
+/* 24時間表 */
+#hourly-panel {
+    flex: 1;
+    padding: 16px;
+    overflow-y: auto;
+    border-right: 1px solid #313244;
+}
+ 
+#hourly-panel h3 {
+    color: #a6adc8;
+    font-size: 14px;
+    margin-bottom: 12px;
+}
+ 
+#hourly-table {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+ 
+.hour-row {
+    display: flex;
+    align-items: stretch;
+    gap: 8px;
+    min-height: 44px;
+}
+ 
+.hour-label {
+    width: 48px;
+    min-width: 48px;
+    font-size: 12px;
+    color: #6c7086;
+    text-align: right;
+    padding-top: 6px;
+    font-variant-numeric: tabular-nums;
+}
+ 
+.hour-input {
+    flex: 1;
+    background: #313244;
+    border: 1px solid #45475a;
+    border-radius: 6px;
+    color: #cdd6f4;
+    font-size: 13px;
+    padding: 6px 10px;
+    resize: none;
+    min-height: 36px;
+    outline: none;
+    transition: border 0.2s;
+    font-family: inherit;
+}
+ 
+.hour-input:focus {
+    border-color: #cba6f7;
+    background: #2a2a3e;
+}
+ 
+/* この日のタスクパネル */
+#day-task-panel {
+    width: 260px;
+    min-width: 220px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    overflow-y: auto;
+}
+ 
+#day-task-panel h3 {
+    color: #a6adc8;
+    font-size: 14px;
+}
+ 
+#day-task-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+    overflow-y: auto;
+}
+ 
+.day-task-item {
+    background: #313244;
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 13px;
+    color: #cdd6f4;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 6px;
+}
+ 
+.day-task-item .day-delete-btn {
+    background: transparent;
+    border: none;
+    color: #f38ba8;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 2px;
+    border-radius: 4px;
+    flex-shrink: 0;
+}
+ 
+#day-task-input-area {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+ 
+#day-task-input {
+    width: 100%;
+    padding: 8px 10px;
+    background: #313244;
+    border: 1px solid #45475a;
+    border-radius: 8px;
+    color: #cdd6f4;
+    font-size: 13px;
+    outline: none;
+}
+ 
+#day-task-input:focus {
+    border-color: #cba6f7;
+}
+ 
+#day-add-task {
+    padding: 8px;
+    background: #cba6f7;
+    color: #1e1e2e;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+ 
+#day-add-task:hover {
+    background: #b4befe;
+}
