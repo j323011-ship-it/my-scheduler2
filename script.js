@@ -54,40 +54,6 @@ function createTaskItem(task, realIndex) {
     return li
 }
 
-// ===== タスクの描画（PCパネル） =====
-function renderTasks() {
-    const list = document.getElementById('task-list')
-    if (!list) return
-    list.innerHTML = ''
-    const filtered = tasks.filter(t => currentFilter === 'all' || t.status === currentFilter)
-    if (filtered.length === 0) {
-        list.innerHTML = '<li style="color:#6c7086;font-size:13px;text-align:center;padding:20px;">タスクがありません</li>'
-        return
-    }
-    filtered.forEach(task => {
-        const li = createTaskItem(task, tasks.indexOf(task))
-        list.appendChild(li)
-    })
-    bindTaskEvents(list)
-}
-
-// ===== タスクの描画（ドロワー） =====
-function renderDrawerTasks() {
-    const list = document.getElementById('drawer-task-list')
-    if (!list) return
-    list.innerHTML = ''
-    const filtered = tasks.filter(t => drawerFilter === 'all' || t.status === drawerFilter)
-    if (filtered.length === 0) {
-        list.innerHTML = '<li style="color:#6c7086;font-size:13px;text-align:center;padding:20px;">タスクがありません</li>'
-        return
-    }
-    filtered.forEach(task => {
-        const li = createTaskItem(task, tasks.indexOf(task))
-        list.appendChild(li)
-    })
-    bindTaskEvents(list)
-}
-
 // ===== タスクイベントのバインド =====
 function bindTaskEvents(container) {
     container.querySelectorAll('.delete-btn').forEach(btn => {
@@ -104,6 +70,38 @@ function bindTaskEvents(container) {
             saveTasks(); renderTasks(); renderDrawerTasks(); renderCalendar()
         })
     })
+}
+
+// ===== タスクの描画（PCパネル） =====
+function renderTasks() {
+    const list = document.getElementById('task-list')
+    if (!list) return
+    list.innerHTML = ''
+    const filtered = tasks.filter(t => currentFilter === 'all' || t.status === currentFilter)
+    if (filtered.length === 0) {
+        list.innerHTML = '<li style="color:#6c7086;font-size:13px;text-align:center;padding:20px;">タスクがありません</li>'
+        return
+    }
+    filtered.forEach(task => {
+        list.appendChild(createTaskItem(task, tasks.indexOf(task)))
+    })
+    bindTaskEvents(list)
+}
+
+// ===== タスクの描画（ドロワー） =====
+function renderDrawerTasks() {
+    const list = document.getElementById('drawer-task-list')
+    if (!list) return
+    list.innerHTML = ''
+    const filtered = tasks.filter(t => drawerFilter === 'all' || t.status === drawerFilter)
+    if (filtered.length === 0) {
+        list.innerHTML = '<li style="color:#6c7086;font-size:13px;text-align:center;padding:20px;">タスクがありません</li>'
+        return
+    }
+    filtered.forEach(task => {
+        list.appendChild(createTaskItem(task, tasks.indexOf(task)))
+    })
+    bindTaskEvents(list)
 }
 
 // ===== タスク追加（PC） =====
@@ -287,7 +285,7 @@ function renderHourlyTable(dateStr) {
     }
 }
 
-// その日専用タスクの保存・読み込み
+// ===== この日専用タスク（メインタスクと独立） =====
 function getDayTasks(dateStr) {
     return JSON.parse(localStorage.getItem('daytasks-' + dateStr)) || []
 }
