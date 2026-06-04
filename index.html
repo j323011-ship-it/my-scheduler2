@@ -1,119 +1,111 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#cba6f7">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="スケジュール">
-    <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="icon-192.png">
-    <title>スケジュール管理</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#1a1a2e">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>スケジューラー</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
 
-    <div id="container">
-
-        <!-- 左側：タスクリスト（PC用） -->
-        <div id="task-panel">
-            <h2>📋 タスクリスト</h2>
-            <div id="task-input-area">
-                <input type="text" id="task-input" placeholder="タスクを入力...">
-                <input type="date" id="task-date">
-                <select id="task-status">
-                    <option value="Next Up">Next Up</option>
-                    <option value="In Progress">In Progress</option>
-                    <option value="Done">Done</option>
-                </select>
-                <select id="task-category">
-                    <option value="仕事">仕事</option>
-                    <option value="学習">学習</option>
-                    <option value="プライベート">プライベート</option>
-                </select>
-                <button id="add-task">追加</button>
-            </div>
-            <div id="filter-area">
-                <button class="filter-btn active" data-filter="all">すべて</button>
-                <button class="filter-btn" data-filter="Next Up">Next Up</button>
-                <button class="filter-btn" data-filter="In Progress">In Progress</button>
-                <button class="filter-btn" data-filter="Done">Done</button>
-            </div>
-            <ul id="task-list"></ul>
-        </div>
-
-        <!-- 右側：カレンダー -->
-        <div id="calendar-panel">
-            <div id="calendar-header">
-                <button id="prev-month">＜</button>
-                <span id="calendar-title"></span>
-                <button id="next-month">＞</button>
-            </div>
-            <div id="calendar"></div>
-        </div>
-
+  <!-- ===== ヘッダー ===== -->
+  <header class="app-header">
+    <div class="header-inner">
+      <h1 class="app-title">SCHEDULER</h1>
+      <div class="header-date" id="headerDate"></div>
     </div>
+  </header>
 
-    <!-- スマホ用：タスクドロワー -->
-    <div id="drawer-overlay" class="hidden"></div>
-    <div id="task-drawer">
-        <div id="drawer-handle"></div>
-        <div id="drawer-inner">
-            <h2>📋 タスクリスト</h2>
-            <div id="drawer-input-area">
-                <input type="text" id="drawer-task-input" placeholder="タスクを入力...">
-                <input type="date" id="drawer-task-date">
-                <select id="drawer-task-status">
-                    <option value="Next Up">Next Up</option>
-                    <option value="In Progress">In Progress</option>
-                    <option value="Done">Done</option>
-                </select>
-                <select id="drawer-task-category">
-                    <option value="仕事">仕事</option>
-                    <option value="学習">学習</option>
-                    <option value="プライベート">プライベート</option>
-                </select>
-                <button id="drawer-add-task">追加</button>
-            </div>
-            <div id="drawer-filter-area">
-                <button class="drawer-filter-btn active" data-filter="all">すべて</button>
-                <button class="drawer-filter-btn" data-filter="Next Up">Next Up</button>
-                <button class="drawer-filter-btn" data-filter="In Progress">In Progress</button>
-                <button class="drawer-filter-btn" data-filter="Done">Done</button>
-            </div>
-            <ul id="drawer-task-list"></ul>
+  <!-- ===== メインコンテンツ ===== -->
+  <main class="main-content">
+
+    <!-- カレンダーセクション -->
+    <section class="calendar-section">
+      <div class="calendar-nav">
+        <button class="nav-btn" id="prevMonth">&#8249;</button>
+        <h2 class="calendar-title" id="calendarTitle"></h2>
+        <button class="nav-btn" id="nextMonth">&#8250;</button>
+      </div>
+      <div class="calendar-grid">
+        <div class="calendar-weekdays">
+          <span>日</span><span>月</span><span>火</span>
+          <span>水</span><span>木</span><span>金</span><span>土</span>
         </div>
+        <div class="calendar-days" id="calendarDays"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ===== タスクドロワー（スマホ）===== -->
+  <button class="drawer-toggle" id="drawerToggle" aria-label="タスクリストを開く">📋</button>
+  <div class="drawer-overlay" id="drawerOverlay"></div>
+  <aside class="task-drawer" id="taskDrawer">
+    <div class="drawer-header">
+      <h2>タスクリスト</h2>
+      <button class="drawer-close" id="drawerClose">×</button>
     </div>
-
-    <!-- スマホ用：タスクボタン -->
-    <button id="task-fab">📋</button>
-
-    <!-- 24時間表モーダル -->
-    <div id="day-modal" class="modal-overlay hidden">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 id="modal-date-title"></h2>
-                <button id="modal-close">✕</button>
-            </div>
-            <div class="modal-body">
-                <div id="hourly-panel">
-                    <h3>🕐 時間割</h3>
-                    <div id="hourly-table"></div>
-                </div>
-                <div id="day-task-panel">
-                    <h3>📋 この日のタスク</h3>
-                    <ul id="day-task-list"></ul>
-                    <div id="day-task-input-area">
-                        <input type="text" id="day-task-input" placeholder="タスクを追加...">
-                        <button id="day-add-task">追加</button>
-                    </div>
-                </div>
-            </div>
+    <div class="task-content" id="taskContent">
+      <!-- タスク追加フォーム -->
+      <div class="task-form">
+        <input type="text" id="taskInput" placeholder="新しいタスクを入力..." maxlength="50">
+        <div class="task-form-row">
+          <input type="date" id="taskDate">
+          <select id="taskCategory">
+            <option value="work">仕事</option>
+            <option value="personal">個人</option>
+            <option value="health">健康</option>
+            <option value="other">その他</option>
+          </select>
         </div>
-    </div>
+        <button class="add-btn" id="addTask">＋ 追加</button>
+      </div>
 
-    <script src="script.js"></script>
+      <!-- フィルター -->
+      <div class="filter-tabs">
+        <button class="filter-tab active" data-filter="all">すべて</button>
+        <button class="filter-tab" data-filter="next">Next Up</button>
+        <button class="filter-tab" data-filter="inprogress">進行中</button>
+        <button class="filter-tab" data-filter="done">完了</button>
+      </div>
+
+      <!-- タスク一覧 -->
+      <ul class="task-list" id="taskList"></ul>
+    </div>
+  </aside>
+
+  <!-- ===== 日付詳細モーダル ===== -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal" id="dateModal">
+      <div class="modal-header">
+        <h2 class="modal-date-title" id="modalDateTitle"></h2>
+        <button class="modal-close" id="modalClose">×</button>
+      </div>
+      <div class="modal-body">
+        <!-- 時間割 -->
+        <div class="timetable-section">
+          <h3 class="section-title">📅 時間割</h3>
+          <div class="timetable" id="timetable"></div>
+        </div>
+        <!-- その日のやることリスト -->
+        <div class="daily-todo-section">
+          <h3 class="section-title">✅ やることリスト</h3>
+          <div class="daily-todo-form">
+            <input type="text" id="dailyTodoInput" placeholder="やることを追加...">
+            <button id="addDailyTodo">追加</button>
+          </div>
+          <ul class="daily-todo-list" id="dailyTodoList"></ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
 </body>
 </html>
