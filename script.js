@@ -164,6 +164,7 @@ function renderCalendar() {
     html += '</tbody></table>'
     document.getElementById('calendar').innerHTML = html
 
+    // 日付クリックでモーダルを開く
     document.querySelectorAll('#calendar td[data-date]').forEach(td => {
         td.addEventListener('click', function () {
             openDayModal(this.dataset.date)
@@ -190,7 +191,7 @@ function openDayModal(dateStr) {
     document.getElementById('modal-date-title').textContent =
         y + '年' + parseInt(m) + '月' + parseInt(d) + '日'
     renderHourlyTable(dateStr)
-    renderDayNotes(dateStr)
+    renderDayTasks(dateStr)
     document.getElementById('day-modal').classList.remove('hidden')
 }
 
@@ -228,51 +229,46 @@ function renderHourlyTable(dateStr) {
     }
 }
 
-// ===== この日のメモ（メインタスクとは独立） =====
-function getDayNotes(dateStr) {
-    return JSON.parse(localStorage.getItem('dayNotes-' + dateStr)) || []
-}
-
-function saveDayNotes(dateStr, notes) {
-    localStorage.setItem('dayNotes-' + dateStr, JSON.stringify(notes))
-}
-
-function renderDayNotes(dateStr) {
+// この日のタスク表示
+function renderDayTasks(dateStr) {
     const list = document.getElementById('day-task-list')
     list.innerHTML = ''
-    const notes = getDayNotes(dateStr)
-    if (notes.length === 0) {
-        list.innerHTML = '<li style="color:#6c7086; font-size:12px; text-align:center; padding:16px;">メモなし</li>'
+    const dayTasks = tasks.filter(t => t.date === dateStr)
+    if (dayTasks.length === 0) {
+        list.innerHTML = '<li style="color:#6c7086; font-size:12px; text-align:center; padding:16px;">タスクなし</li>'
         return
     }
-    notes.forEach((note, index) => {
+    dayTasks.forEach(task => {
+        const realIndex = tasks.indexOf(task)
         const li = document.createElement('li')
         li.className = 'day-task-item'
         li.innerHTML = `
-            <span style="flex:1">${note}</span>
-            <button class="day-delete-btn" data-index="${index}">🗑</button>
+            <span style="flex:1">${task.text}</span>
+            <button class="day-delete-btn" data-index="${realIndex}">🗑</button>
         `
         list.appendChild(li)
     })
     document.querySelectorAll('.day-delete-btn').forEach(btn => {
         btn.addEventListener('click', function () {
             const i = parseInt(this.dataset.index)
-            const notes = getDayNotes(dateStr)
-            notes.splice(i, 1)
-            saveDayNotes(dateStr, notes)
-            renderDayNotes(dateStr)
+            tasks.splice(i, 1)
+            saveTasks()
+            renderDayTasks(dateStr)
+            renderTasks()
+            renderCalendar()
         })
     })
 }
 
-// この日にメモを追加
+// この日にタスクを追加
 document.getElementById('day-add-task').addEventListener('click', function () {
     const text = document.getElementById('day-task-input').value.trim()
     if (!text || !selectedDate) return
-    const notes = getDayNotes(selectedDate)
-    notes.push(text)
-    saveDayNotes(selectedDate, notes)
-    renderDayNotes(selectedDate)
+    tasks.push({ text, date: selectedDate, status: 'Next Up', category: 'プライベート' })
+    saveTasks()
+    renderDayTasks(selectedDate)
+    renderTasks()
+    renderCalendar()
     document.getElementById('day-task-input').value = ''
 })
 
