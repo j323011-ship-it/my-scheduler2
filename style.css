@@ -1,518 +1,535 @@
-/* ===== CSS変数 ===== */
-:root {
-  --bg: #0f0f1a;
-  --bg-card: #1a1a2e;
-  --bg-elevated: #22223b;
-  --accent: #e94560;
-  --accent2: #4cc9f0;
-  --text: #e8e8f0;
-  --text-muted: #7878a0;
-  --border: #2d2d4e;
-  --radius: 12px;
-  --shadow: 0 4px 24px rgba(0,0,0,0.4);
-
-  /* 優先度カラー */
-  --p-red: #e94560;
-  --p-orange: #f4a261;
-  --p-yellow: #e9c46a;
-  --p-green: #57cc99;
-
-  /* カテゴリカラー */
-  --cat-work: #4cc9f0;
-  --cat-personal: #b5838d;
-  --cat-health: #57cc99;
-  --cat-other: #7878a0;
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
 }
-
-/* ===== リセット ===== */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { font-size: 16px; }
+ 
 body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: 'Noto Sans JP', sans-serif;
-  min-height: 100vh;
-  overflow-x: hidden;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    background-color: #f0f2f5;
+    color: #333;
+    height: 100vh;
+    overflow: hidden;
 }
-button { cursor: pointer; border: none; background: none; font-family: inherit; }
-input, select { font-family: inherit; }
-ul { list-style: none; }
-
-/* ===== ヘッダー ===== */
-.app-header {
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  background: var(--bg-card);
-  border-bottom: 1px solid var(--border);
-  backdrop-filter: blur(10px);
+ 
+#container {
+    display: flex;
+    height: 100vh;
+    gap: 0;
 }
-.header-inner {
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 14px 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+ 
+/* ===== 左側：タスクパネル ===== */
+#task-panel {
+    width: 360px;
+    min-width: 320px;
+    background-color: #1e1e2e;
+    color: #cdd6f4;
+    display: flex;
+    flex-direction: column;
+    padding: 24px 20px;
+    overflow-y: auto;
+    gap: 16px;
 }
-.app-title {
-  font-family: 'Space Mono', monospace;
-  font-size: 1.2rem;
-  letter-spacing: 0.3em;
-  color: var(--accent);
+ 
+#task-panel h2 {
+    font-size: 20px;
+    font-weight: 700;
+    color: #cba6f7;
+    letter-spacing: 0.05em;
 }
-.header-date {
-  font-family: 'Space Mono', monospace;
-  font-size: 0.8rem;
-  color: var(--text-muted);
+ 
+/* 入力エリア */
+#task-input-area {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    background: #313244;
+    padding: 16px;
+    border-radius: 12px;
 }
-
-/* ===== メイン ===== */
-.main-content {
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 24px 16px 100px;
+ 
+#task-input-area input[type="text"],
+#task-input-area input[type="date"],
+#task-input-area select {
+    width: 100%;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid #45475a;
+    background: #1e1e2e;
+    color: #cdd6f4;
+    font-size: 14px;
+    outline: none;
+    transition: border 0.2s;
 }
-
-/* ===== カレンダー ===== */
-.calendar-section {
-  background: var(--bg-card);
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-  padding: 20px;
-  box-shadow: var(--shadow);
+ 
+#task-input-area input:focus,
+#task-input-area select:focus {
+    border-color: #cba6f7;
 }
-.calendar-nav {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 20px;
+ 
+#add-task {
+    padding: 10px;
+    background: #cba6f7;
+    color: #1e1e2e;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s;
 }
-.nav-btn {
-  width: 36px; height: 36px;
-  border-radius: 50%;
-  background: var(--bg-elevated);
-  color: var(--text);
-  font-size: 1.4rem;
-  line-height: 1;
-  transition: background 0.2s, color 0.2s;
+ 
+#add-task:hover {
+    background: #b4befe;
 }
-.nav-btn:hover { background: var(--accent); color: #fff; }
-.calendar-title {
-  font-family: 'Space Mono', monospace;
-  font-size: 1.1rem;
-  letter-spacing: 0.1em;
+ 
+/* フィルターボタン */
+#filter-area {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
 }
-.calendar-weekdays {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  margin-bottom: 8px;
+ 
+.filter-btn {
+    padding: 5px 12px;
+    border-radius: 20px;
+    border: 1px solid #45475a;
+    background: transparent;
+    color: #a6adc8;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
 }
-.calendar-weekdays span {
-  text-align: center;
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  padding: 4px 0;
+ 
+.filter-btn.active,
+.filter-btn:hover {
+    background: #cba6f7;
+    color: #1e1e2e;
+    border-color: #cba6f7;
+    font-weight: 700;
 }
-.calendar-weekdays span:first-child { color: var(--accent); }
-.calendar-weekdays span:last-child { color: var(--accent2); }
-.calendar-days {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 4px;
+ 
+/* タスクリスト */
+#task-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    overflow-y: auto;
 }
-.cal-day {
-  aspect-ratio: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  padding: 4px 2px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background 0.15s;
-  min-height: 48px;
-  position: relative;
-}
-.cal-day:hover { background: var(--bg-elevated); }
-.cal-day.today {
-  background: rgba(233, 69, 96, 0.15);
-  border: 1px solid var(--accent);
-}
-.cal-day.other-month .day-num { color: var(--text-muted); opacity: 0.4; }
-.cal-day.sunday .day-num { color: var(--accent); }
-.cal-day.saturday .day-num { color: var(--accent2); }
-.day-num {
-  font-family: 'Space Mono', monospace;
-  font-size: 0.8rem;
-  font-weight: 700;
-}
-.day-tasks {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 2px;
-  justify-content: center;
-  margin-top: 2px;
-  width: 100%;
-}
-.day-task-dot {
-  width: 6px; height: 6px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-/* ===== ドロワートグルボタン ===== */
-.drawer-toggle {
-  position: fixed;
-  bottom: 24px;
-  left: 24px;
-  width: 56px; height: 56px;
-  border-radius: 50%;
-  background: var(--accent);
-  color: #fff;
-  font-size: 1.4rem;
-  box-shadow: 0 4px 20px rgba(233,69,96,0.5);
-  z-index: 200;
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-.drawer-toggle:hover { transform: scale(1.1); }
-
-/* ===== ドロワー ===== */
-.drawer-overlay {
-  position: fixed; inset: 0;
-  background: rgba(0,0,0,0.6);
-  z-index: 300;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.3s;
-}
-.drawer-overlay.active { opacity: 1; pointer-events: all; }
-
-.task-drawer {
-  position: fixed;
-  left: 0; top: 0; bottom: 0;
-  width: min(360px, 90vw);
-  background: var(--bg-card);
-  border-right: 1px solid var(--border);
-  z-index: 400;
-  transform: translateX(-100%);
-  transition: transform 0.3s cubic-bezier(.4,0,.2,1);
-  display: flex;
-  flex-direction: column;
-  box-shadow: 4px 0 32px rgba(0,0,0,0.5);
-}
-.task-drawer.open { transform: translateX(0); }
-
-.drawer-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px;
-  border-bottom: 1px solid var(--border);
-  flex-shrink: 0;
-}
-.drawer-header h2 { font-size: 1rem; font-weight: 700; }
-.drawer-close {
-  width: 32px; height: 32px;
-  border-radius: 50%;
-  background: var(--bg-elevated);
-  color: var(--text-muted);
-  font-size: 1.2rem;
-  transition: background 0.2s;
-}
-.drawer-close:hover { background: var(--accent); color: #fff; }
-
-.task-content {
-  flex: 1;
-  overflow-y: auto;
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-/* ===== タスクフォーム ===== */
-.task-form {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.task-form input[type="text"],
-.task-form input[type="date"],
-.task-form select {
-  background: var(--bg-elevated);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  color: var(--text);
-  padding: 10px 12px;
-  font-size: 0.9rem;
-  outline: none;
-  transition: border-color 0.2s;
-}
-.task-form input:focus, .task-form select:focus { border-color: var(--accent); }
-.task-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.add-btn {
-  background: var(--accent);
-  color: #fff;
-  border-radius: 8px;
-  padding: 10px;
-  font-size: 0.9rem;
-  font-weight: 700;
-  transition: opacity 0.2s;
-}
-.add-btn:hover { opacity: 0.85; }
-
-/* ===== フィルタータブ ===== */
-.filter-tabs {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-.filter-tab {
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-size: 0.78rem;
-  background: var(--bg-elevated);
-  color: var(--text-muted);
-  transition: background 0.2s, color 0.2s;
-}
-.filter-tab.active, .filter-tab:hover {
-  background: var(--accent);
-  color: #fff;
-}
-
-/* ===== タスクリスト ===== */
-.task-list { display: flex; flex-direction: column; gap: 8px; }
+ 
 .task-item {
-  background: var(--bg-elevated);
-  border-radius: 10px;
-  padding: 12px;
-  border-left: 3px solid var(--p-green);
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  transition: opacity 0.2s;
+    background: #313244;
+    border-radius: 10px;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    transition: opacity 0.2s;
 }
-.task-item.priority-red { border-left-color: var(--p-red); }
-.task-item.priority-orange { border-left-color: var(--p-orange); }
-.task-item.priority-yellow { border-left-color: var(--p-yellow); }
-.task-item.priority-green { border-left-color: var(--p-green); }
-.task-item.done { opacity: 0.5; }
-.task-item.done .task-name { text-decoration: line-through; }
-
-.task-priority-icon { font-size: 0.9rem; flex-shrink: 0; margin-top: 1px; }
-.task-info { flex: 1; min-width: 0; }
-.task-name { font-size: 0.88rem; word-break: break-all; }
-.task-meta {
-  display: flex;
-  gap: 6px;
-  margin-top: 4px;
-  flex-wrap: wrap;
-  align-items: center;
+ 
+.task-item.done {
+    opacity: 0.5;
 }
-.task-date { font-size: 0.72rem; color: var(--text-muted); font-family: 'Space Mono', monospace; }
-.task-category {
-  font-size: 0.68rem;
-  padding: 2px 6px;
-  border-radius: 4px;
-  background: rgba(255,255,255,0.06);
+ 
+.task-item .task-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
 }
-.task-status-btn {
-  font-size: 0.68rem;
-  padding: 2px 8px;
-  border-radius: 4px;
-  background: rgba(255,255,255,0.08);
-  color: var(--text-muted);
-  transition: background 0.2s;
+ 
+.task-item .task-name {
+    font-size: 14px;
+    font-weight: 600;
+    flex: 1;
+    word-break: break-all;
 }
-.task-status-btn:hover { background: rgba(255,255,255,0.15); }
-.task-delete {
-  color: var(--text-muted);
-  font-size: 0.85rem;
-  padding: 2px 6px;
-  border-radius: 4px;
-  transition: color 0.2s, background 0.2s;
-  flex-shrink: 0;
+ 
+.task-item.done .task-name {
+    text-decoration: line-through;
+    color: #6c7086;
 }
-.task-delete:hover { color: var(--accent); background: rgba(233,69,96,0.1); }
-
-/* ===== モーダル ===== */
-.modal-overlay {
-  position: fixed; inset: 0;
-  background: rgba(0,0,0,0.7);
-  z-index: 500;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.3s;
-  padding: 16px;
+ 
+.task-item .delete-btn {
+    background: transparent;
+    border: none;
+    color: #f38ba8;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 2px 4px;
+    border-radius: 4px;
+    transition: background 0.2s;
 }
-.modal-overlay.active { opacity: 1; pointer-events: all; }
-.modal {
-  background: var(--bg-card);
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-  width: 100%;
-  max-width: 560px;
-  max-height: 85vh;
-  display: flex;
-  flex-direction: column;
-  box-shadow: var(--shadow);
-  transform: translateY(20px);
-  transition: transform 0.3s;
+ 
+.task-item .delete-btn:hover {
+    background: #45475a;
 }
-.modal-overlay.active .modal { transform: translateY(0); }
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px 24px;
-  border-bottom: 1px solid var(--border);
-  flex-shrink: 0;
+ 
+.task-item .task-meta {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    align-items: center;
 }
-.modal-date-title {
-  font-family: 'Space Mono', monospace;
-  font-size: 1rem;
-  color: var(--accent2);
+ 
+.task-item .task-priority {
+    font-size: 12px;
 }
-.modal-close {
-  width: 32px; height: 32px;
-  border-radius: 50%;
-  background: var(--bg-elevated);
-  color: var(--text-muted);
-  font-size: 1.2rem;
-  transition: background 0.2s;
+ 
+.task-item .task-category {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: #45475a;
+    color: #cdd6f4;
 }
-.modal-close:hover { background: var(--accent); color: #fff; }
-
-.modal-body {
-  overflow-y: auto;
-  padding: 20px 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
+ 
+.task-item .task-date-label {
+    font-size: 11px;
+    color: #a6adc8;
 }
-.section-title {
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: var(--text-muted);
-  letter-spacing: 0.05em;
-  margin-bottom: 12px;
+ 
+.task-item .task-status-select {
+    font-size: 11px;
+    padding: 2px 6px;
+    border-radius: 6px;
+    border: 1px solid #45475a;
+    background: #1e1e2e;
+    color: #cdd6f4;
+    cursor: pointer;
+    outline: none;
 }
-
-/* ===== 時間割 ===== */
-.timetable {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  max-height: 300px;
-  overflow-y: auto;
+ 
+/* ===== 右側：カレンダーパネル ===== */
+#calendar-panel {
+    flex: 1;
+    background: #ffffff;
+    display: flex;
+    flex-direction: column;
+    padding: 24px;
+    overflow-y: auto;
 }
-.timetable-row {
-  display: grid;
-  grid-template-columns: 52px 1fr;
-  gap: 8px;
-  align-items: center;
+ 
+#calendar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
 }
-.timetable-time {
-  font-family: 'Space Mono', monospace;
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  text-align: right;
+ 
+#calendar-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: #1e1e2e;
 }
-.timetable-input {
-  background: var(--bg-elevated);
-  border: 1px solid transparent;
-  border-radius: 6px;
-  color: var(--text);
-  padding: 6px 10px;
-  font-size: 0.82rem;
-  outline: none;
-  width: 100%;
-  transition: border-color 0.2s;
+ 
+#prev-month, #next-month {
+    background: #f0f2f5;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-size: 16px;
+    cursor: pointer;
+    color: #1e1e2e;
+    transition: background 0.2s;
 }
-.timetable-input:focus { border-color: var(--accent2); }
-.timetable-input::placeholder { color: var(--text-muted); opacity: 0.5; }
-
-/* ===== 日別TODOリスト ===== */
-.daily-todo-form {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 10px;
+ 
+#prev-month:hover, #next-month:hover {
+    background: #cba6f7;
+    color: white;
 }
-.daily-todo-form input {
-  flex: 1;
-  background: var(--bg-elevated);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  color: var(--text);
-  padding: 8px 12px;
-  font-size: 0.85rem;
-  outline: none;
-  transition: border-color 0.2s;
+ 
+/* カレンダーテーブル */
+#calendar table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
 }
-.daily-todo-form input:focus { border-color: var(--accent); }
-.daily-todo-form button {
-  background: var(--accent2);
-  color: #0f0f1a;
-  border-radius: 8px;
-  padding: 8px 14px;
-  font-size: 0.82rem;
-  font-weight: 700;
-  transition: opacity 0.2s;
+ 
+#calendar th {
+    text-align: center;
+    padding: 10px 0;
+    font-size: 13px;
+    font-weight: 700;
+    color: #6c7086;
+    border-bottom: 2px solid #f0f2f5;
 }
-.daily-todo-form button:hover { opacity: 0.85; }
-.daily-todo-list { display: flex; flex-direction: column; gap: 6px; }
-.daily-todo-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 10px;
-  background: var(--bg-elevated);
-  border-radius: 8px;
+ 
+#calendar th:first-child { color: #f38ba8; }
+#calendar th:last-child { color: #89b4fa; }
+ 
+#calendar td {
+    border: 1px solid #f0f2f5;
+    height: 90px;
+    vertical-align: top;
+    padding: 6px 8px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.15s;
+    position: relative;
 }
-.daily-todo-item input[type="checkbox"] {
-  width: 16px; height: 16px;
-  accent-color: var(--accent2);
-  cursor: pointer;
-  flex-shrink: 0;
+ 
+#calendar td:hover {
+    background: #f5f0ff;
 }
-.daily-todo-item label {
-  flex: 1;
-  font-size: 0.85rem;
-  cursor: pointer;
+ 
+#calendar td.today {
+    background: #f0f0ff;
 }
-.daily-todo-item.checked label { text-decoration: line-through; color: var(--text-muted); }
-.daily-todo-delete {
-  color: var(--text-muted);
-  font-size: 0.8rem;
-  padding: 2px 6px;
-  border-radius: 4px;
-  transition: color 0.2s;
+ 
+#calendar td.today .day-number {
+    background: #cba6f7;
+    color: white;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
 }
-.daily-todo-delete:hover { color: var(--accent); }
-
-/* ===== スクロールバー ===== */
-::-webkit-scrollbar { width: 4px; }
+ 
+#calendar td.sunday .day-number { color: #f38ba8; }
+#calendar td.saturday .day-number { color: #89b4fa; }
+ 
+.day-number {
+    font-size: 13px;
+    font-weight: 600;
+    color: #1e1e2e;
+    margin-bottom: 4px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+ 
+.day-tasks {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+ 
+.day-task-dot {
+    font-size: 10px;
+    background: #cba6f7;
+    color: #1e1e2e;
+    border-radius: 4px;
+    padding: 1px 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+ 
+/* スクロールバー */
+::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-
-/* ===== レスポンシブ（PC: ドロワーをサイドパネルに） ===== */
-@media (min-width: 768px) {
-  .drawer-toggle { display: none; }
-  .drawer-overlay { display: none !important; }
-  .task-drawer {
+::-webkit-scrollbar-thumb { background: #45475a; border-radius: 3px; }
+ 
+/* ===== 24時間表モーダル ===== */
+.modal-overlay {
     position: fixed;
-    right: 0; top: 0; bottom: 0; left: auto;
-    width: 320px;
-    transform: translateX(0) !important;
-    border-right: none;
-    border-left: 1px solid var(--border);
-  }
-  .main-content {
-    padding-right: calc(320px + 24px);
-  }
+    top: 0; left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+ 
+.modal-overlay.hidden {
+    display: none;
+}
+ 
+.modal-content {
+    background: #1e1e2e;
+    border-radius: 16px;
+    width: 90vw;
+    max-width: 900px;
+    height: 85vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+ 
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 24px;
+    border-bottom: 1px solid #313244;
+}
+ 
+.modal-header h2 {
+    color: #cba6f7;
+    font-size: 18px;
+}
+ 
+#modal-close {
+    background: #313244;
+    border: none;
+    color: #cdd6f4;
+    font-size: 16px;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+ 
+#modal-close:hover {
+    background: #f38ba8;
+    color: white;
+}
+ 
+.modal-body {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+ 
+/* 24時間表 */
+#hourly-panel {
+    flex: 1;
+    padding: 16px;
+    overflow-y: auto;
+    border-right: 1px solid #313244;
+}
+ 
+#hourly-panel h3 {
+    color: #a6adc8;
+    font-size: 14px;
+    margin-bottom: 12px;
+}
+ 
+#hourly-table {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+ 
+.hour-row {
+    display: flex;
+    align-items: stretch;
+    gap: 8px;
+    min-height: 44px;
+}
+ 
+.hour-label {
+    width: 48px;
+    min-width: 48px;
+    font-size: 12px;
+    color: #6c7086;
+    text-align: right;
+    padding-top: 6px;
+    font-variant-numeric: tabular-nums;
+}
+ 
+.hour-input {
+    flex: 1;
+    background: #313244;
+    border: 1px solid #45475a;
+    border-radius: 6px;
+    color: #cdd6f4;
+    font-size: 13px;
+    padding: 6px 10px;
+    resize: none;
+    min-height: 36px;
+    outline: none;
+    transition: border 0.2s;
+    font-family: inherit;
+}
+ 
+.hour-input:focus {
+    border-color: #cba6f7;
+    background: #2a2a3e;
+}
+ 
+/* この日のタスクパネル */
+#day-task-panel {
+    width: 260px;
+    min-width: 220px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    overflow-y: auto;
+}
+ 
+#day-task-panel h3 {
+    color: #a6adc8;
+    font-size: 14px;
+}
+ 
+#day-task-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+    overflow-y: auto;
+}
+ 
+.day-task-item {
+    background: #313244;
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 13px;
+    color: #cdd6f4;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 6px;
+}
+ 
+.day-task-item .day-delete-btn {
+    background: transparent;
+    border: none;
+    color: #f38ba8;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 2px;
+    border-radius: 4px;
+    flex-shrink: 0;
+}
+ 
+#day-task-input-area {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+ 
+#day-task-input {
+    width: 100%;
+    padding: 8px 10px;
+    background: #313244;
+    border: 1px solid #45475a;
+    border-radius: 8px;
+    color: #cdd6f4;
+    font-size: 13px;
+    outline: none;
+}
+ 
+#day-task-input:focus {
+    border-color: #cba6f7;
+}
+ 
+#day-add-task {
+    padding: 8px;
+    background: #cba6f7;
+    color: #1e1e2e;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+ 
+#day-add-task:hover {
+    background: #b4befe;
 }
