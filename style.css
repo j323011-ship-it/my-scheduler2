@@ -14,31 +14,6 @@ body {
     overflow: hidden;
 }
 
-/* ===== スマホ用タブナビ ===== */
-#mobile-nav {
-    display: none;
-    background: #1e1e2e;
-    border-bottom: 1px solid #313244;
-}
-
-.nav-btn {
-    flex: 1;
-    padding: 14px;
-    background: transparent;
-    border: none;
-    color: #6c7086;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    border-bottom: 3px solid transparent;
-    transition: all 0.2s;
-}
-
-.nav-btn.active {
-    color: #cba6f7;
-    border-bottom-color: #cba6f7;
-}
-
 /* ===== レイアウト ===== */
 #container {
     display: flex;
@@ -89,9 +64,7 @@ body {
 }
 
 #task-input-area input:focus,
-#task-input-area select:focus {
-    border-color: #cba6f7;
-}
+#task-input-area select:focus { border-color: #cba6f7; }
 
 #add-task {
     padding: 10px;
@@ -102,7 +75,6 @@ body {
     font-size: 14px;
     font-weight: 700;
     cursor: pointer;
-    transition: background 0.2s;
 }
 
 #add-task:hover { background: #b4befe; }
@@ -147,7 +119,6 @@ body {
     display: flex;
     flex-direction: column;
     gap: 6px;
-    transition: opacity 0.2s;
 }
 
 .task-item.done { opacity: 0.5; }
@@ -178,7 +149,6 @@ body {
     cursor: pointer;
     font-size: 16px;
     padding: 4px;
-    border-radius: 4px;
     min-width: 32px;
     min-height: 32px;
 }
@@ -367,10 +337,7 @@ body {
     flex-shrink: 0;
 }
 
-.modal-header h2 {
-    color: #cba6f7;
-    font-size: 18px;
-}
+.modal-header h2 { color: #cba6f7; font-size: 18px; }
 
 #modal-close {
     background: #313244;
@@ -381,7 +348,6 @@ body {
     height: 40px;
     border-radius: 8px;
     cursor: pointer;
-    transition: background 0.2s;
 }
 
 #modal-close:hover { background: #f38ba8; color: white; }
@@ -399,17 +365,13 @@ body {
     border-right: 1px solid #313244;
 }
 
-#hourly-panel h3 {
+#hourly-panel h3, #day-task-panel h3 {
     color: #a6adc8;
     font-size: 14px;
     margin-bottom: 12px;
 }
 
-#hourly-table {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-}
+#hourly-table { display: flex; flex-direction: column; gap: 2px; }
 
 .hour-row {
     display: flex;
@@ -442,10 +404,7 @@ body {
     font-family: inherit;
 }
 
-.hour-input:focus {
-    border-color: #cba6f7;
-    background: #2a2a3e;
-}
+.hour-input:focus { border-color: #cba6f7; background: #2a2a3e; }
 
 #day-task-panel {
     width: 240px;
@@ -455,11 +414,6 @@ body {
     flex-direction: column;
     gap: 12px;
     overflow-y: auto;
-}
-
-#day-task-panel h3 {
-    color: #a6adc8;
-    font-size: 14px;
 }
 
 #day-task-list {
@@ -483,6 +437,18 @@ body {
     gap: 6px;
 }
 
+.day-task-item.done {
+    opacity: 0.6;
+}
+
+.day-task-item input[type="checkbox"] {
+    accent-color: #cba6f7;
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+
 .day-delete-btn {
     background: transparent;
     border: none;
@@ -494,10 +460,26 @@ body {
     min-height: 32px;
 }
 
-#day-task-input-area {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
+#day-task-input-area { display: flex; flex-direction: column; gap: 6px; }
+@media (orientation: portrait) {
+    .modal-body {
+        flex-direction: column;
+    }
+
+    #hourly-panel {
+        flex: 2;
+        border-right: none;
+        border-bottom: 1px solid #313244;
+        min-height: 0;
+    }
+
+    #day-task-panel {
+        flex: 1;
+        width: 100%;
+        min-width: unset;
+        max-height: none;
+        min-height: 0;
+    }
 }
 
 #day-task-input {
@@ -529,114 +511,206 @@ body {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #45475a; border-radius: 3px; }
 
+/* ===== スマホ用ドロワー ===== */
+#task-fab {
+    display: none;
+}
+
+#drawer-overlay {
+    display: none;
+}
+
+#task-drawer {
+    display: none;
+}
+
 /* ===== スマホ対応（768px以下） ===== */
 @media (max-width: 768px) {
-    html, body {
-        overflow: hidden;
-        height: 100%;
-        height: 100dvh;
-    }
 
-    #mobile-nav {
-        display: flex;
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        z-index: 100;
-        border-top: 1px solid #313244;
-        border-bottom: none;
-    }
+    /* PCのタスクパネルを非表示 */
+    #task-panel { display: none; }
 
     #container {
-        flex-direction: column;
         height: 100dvh;
         overflow: hidden;
-        padding-bottom: 56px;
-    }
-
-    /* タブ切り替え */
-    .tab-panel {
-        display: none;
-        width: 100%;
-    }
-
-    .tab-panel.active {
-        display: flex;
-        flex-direction: column;
-        flex: 1;
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
-        height: calc(100dvh - 56px);
-    }
-
-    #task-panel {
-        width: 100%;
-        min-width: unset;
-        padding: 16px;
-        padding-bottom: 24px;
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
     }
 
     #calendar-panel {
         width: 100%;
-        padding: 16px;
-        padding-bottom: 24px;
+        height: 100dvh;
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
-        background: #ffffff;
+        padding: 16px;
+        padding-bottom: 90px;
     }
 
     #calendar-title { font-size: 18px; }
 
-    #calendar table {
-        width: 100%;
-        table-layout: fixed;
-    }
-
     #calendar td {
-        height: 56px;
-        padding: 3px;
+        height: 64px;
+        padding: 4px;
         font-size: 11px;
     }
 
-    .day-number {
-        font-size: 12px;
-        width: 22px;
-        height: 22px;
-    }
-
+    .day-number { font-size: 12px; width: 22px; height: 22px; }
     .day-task-dot { font-size: 9px; }
 
-    /* モーダルをスマホ用に縦並びに */
-    .modal-overlay {
-        padding: 8px;
-        align-items: flex-end;
+    /* タスクボタン（右下に浮くボタン） */
+    #task-fab {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background: #cba6f7;
+        border: none;
+        font-size: 24px;
+        cursor: pointer;
+        z-index: 200;
+        box-shadow: 0 4px 16px rgba(203,166,247,0.5);
+        transition: transform 0.2s;
     }
+
+    #task-fab:active { transform: scale(0.9); }
+
+    /* オーバーレイ（ドロワーの後ろの暗い幕） */
+    #drawer-overlay {
+        display: block;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.5);
+        z-index: 300;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s;
+    }
+
+    #drawer-overlay.open {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    /* ドロワー本体 */
+    #task-drawer {
+        display: flex;
+        flex-direction: column;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 85dvh;
+        background: #1e1e2e;
+        border-radius: 20px 20px 0 0;
+        z-index: 400;
+        transform: translateY(100%);
+        transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+    }
+
+    #task-drawer.open {
+        transform: translateY(0);
+    }
+
+    /* ドロワーの引っ張りバー */
+    #drawer-handle {
+        width: 40px;
+        height: 4px;
+        background: #45475a;
+        border-radius: 2px;
+        margin: 12px auto 4px;
+        flex-shrink: 0;
+    }
+
+    #drawer-inner {
+        flex: 1;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        padding: 12px 20px 32px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        color: #cdd6f4;
+    }
+
+    #drawer-inner h2 {
+        font-size: 18px;
+        font-weight: 700;
+        color: #cba6f7;
+    }
+
+    #drawer-input-area {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        background: #313244;
+        padding: 14px;
+        border-radius: 12px;
+    }
+
+    #drawer-input-area input,
+    #drawer-input-area select {
+        width: 100%;
+        padding: 8px 12px;
+        border-radius: 8px;
+        border: 1px solid #45475a;
+        background: #1e1e2e;
+        color: #cdd6f4;
+        font-size: 14px;
+        outline: none;
+    }
+
+    #drawer-input-area input:focus,
+    #drawer-input-area select:focus { border-color: #cba6f7; }
+
+    #drawer-add-task {
+        padding: 10px;
+        background: #cba6f7;
+        color: #1e1e2e;
+        border: none;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    #drawer-filter-area {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+    }
+
+    .drawer-filter-btn {
+        padding: 5px 12px;
+        border-radius: 20px;
+        border: 1px solid #45475a;
+        background: transparent;
+        color: #a6adc8;
+        font-size: 12px;
+        cursor: pointer;
+    }
+
+    .drawer-filter-btn.active {
+        background: #cba6f7;
+        color: #1e1e2e;
+        border-color: #cba6f7;
+        font-weight: 700;
+    }
+
+    #drawer-task-list {
+        list-style: none;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    /* モーダルをスマホ用に縦並び（orientationで対応済みのため最小限に） */
+    .modal-overlay { padding: 8px; align-items: flex-end; }
 
     .modal-content {
         height: 95dvh;
         border-radius: 16px 16px 8px 8px;
-    }
-
-    .modal-body {
-        flex-direction: column;
-    }
-
-    #hourly-panel {
-        flex: 1;
-        border-right: none;
-        border-bottom: 1px solid #313244;
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
-    }
-
-    #day-task-panel {
-        width: 100%;
-        min-width: unset;
-        max-height: 220px;
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
     }
 }
