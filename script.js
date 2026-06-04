@@ -1,353 +1,387 @@
-// ===== PWA Service Worker 登録 =====
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js')
+/* =============================================
+   スケジューラー app.js
+   ============================================= */
+
+// ===== 状態 =====
+let currentYear  = new Date().getFullYear();
+let currentMonth = new Date().getMonth();
+let currentFilter = 'all';
+let selectedDate  = null;
+
+// ===== localStorage キー =====
+const KEYS = {
+  tasks:    'scheduler_tasks',
+  timetable:'scheduler_timetable',
+  dailyTodo:'scheduler_daily_todo',
+};
+
+// ===== データ読み書き =====
+function load(key) {
+  try { return JSON.parse(localStorage.getItem(key)) || {}; } catch { return {}; }
+}
+function save(key, data) {
+  localStorage.setItem(key, JSON.stringify(data));
+}
+function loadTasks() {
+  try { return JSON.parse(localStorage.getItem(KEYS.tasks)) || []; } catch { return []; }
+}
+function saveTasks(tasks) {
+  localStorage.setItem(KEYS.tasks, JSON.stringify(tasks));
 }
 
-// ===== データ管理 =====
-let tasks = JSON.parse(localStorage.getItem('tasks')) || []
-let currentYear = new Date().getFullYear()
-let currentMonth = new Date().getMonth()
-let currentFilter = 'all'
-let drawerFilter = 'all'
-let selectedDate = ''
-
-// ===== 優先度の自動計算 =====
-function calcPriority(dateStr, status) {
-    if (status === 'Done') return '✅ 完了'
-    if (!dateStr) return '🟢 余裕あり'
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-    const deadline = new Date(dateStr)
-    deadline.setHours(0, 0, 0, 0)
-    const diff = Math.floor((deadline - today) / (1000 * 60 * 60 * 24))
-    if (diff < 0) return '🚨 期限切れ'
-    if (diff === 0) return '🔴 超緊急(今日)'
-    if (diff < 3) return '🟠 要注意(3日以内)'
-    if (diff < 7) return '🟡 もうすぐ(今週中)'
-    return '🟢 余裕あり'
+// ===== 優先度計算 =====
+function calcPriority(dateStr) {
+  if (!dateStr) return 'green';
+  const diff = (new Date(dateStr) - new Date().setHours(0,0,0,0)) / 86400000;
+  if (diff < 0)  return 'red';
+  if (diff <= 2) return 'red';
+  if (diff <= 5) return 'orange';
+  if (diff <= 14)return 'yellow';
+  return 'green';
+}
+function priorityIcon(p) {
+  return { red:'🔴', orange:'🟠', yellow:'🟡', green:'🟢' }[p] || '🟢';
 }
 
-function saveTasks() {
-    localStorage.setItem('tasks', JSON.stringify(tasks))
+// ===== ヘッダー日付 =====
+function updateHeaderDate() {
+  const d = new Date();
+  const days = ['日','月','火','水','木','金','土'];
+  document.getElementById('headerDate').textContent =
+    `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')} (${days[d.getDay()]})`;
 }
 
-// ===== タスクアイテムのHTML生成（共通） =====
-function createTaskItem(task, realIndex) {
-    const li = document.createElement('li')
-    li.className = 'task-item' + (task.status === 'Done' ? ' done' : '')
-    const priority = calcPriority(task.date, task.status)
-    li.innerHTML = `
-        <div class="task-top">
-            <span class="task-name">${task.text}</span>
-            <button class="delete-btn" data-index="${realIndex}">🗑</button>
-        </div>
-        <div class="task-meta">
-            <span class="task-priority">${priority}</span>
-            <span class="task-category">${task.category}</span>
-            ${task.date ? `<span class="task-date-label">📅 ${task.date}</span>` : ''}
-            <select class="task-status-select" data-index="${realIndex}">
-                <option value="Next Up" ${task.status === 'Next Up' ? 'selected' : ''}>Next Up</option>
-                <option value="In Progress" ${task.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
-                <option value="Done" ${task.status === 'Done' ? 'selected' : ''}>Done</option>
-            </select>
-        </div>`
-    return li
-}
-
-// ===== タスクイベントのバインド =====
-function bindTaskEvents(container) {
-    container.querySelectorAll('.delete-btn').forEach(btn => {
-        btn.addEventListener('click', function () {
-            tasks.splice(parseInt(this.dataset.index), 1)
-            saveTasks(); renderTasks(); renderDrawerTasks(); renderCalendar()
-        })
-    })
-    container.querySelectorAll('.task-status-select').forEach(sel => {
-        sel.addEventListener('change', function () {
-            const i = parseInt(this.dataset.index)
-            tasks[i].status = this.value
-            if (this.value === 'Done') tasks[i].completedDate = new Date().toISOString().split('T')[0]
-            saveTasks(); renderTasks(); renderDrawerTasks(); renderCalendar()
-        })
-    })
-}
-
-// ===== タスクの描画（PCパネル） =====
-function renderTasks() {
-    const list = document.getElementById('task-list')
-    if (!list) return
-    list.innerHTML = ''
-    const filtered = tasks.filter(t => currentFilter === 'all' || t.status === currentFilter)
-    if (filtered.length === 0) {
-        list.innerHTML = '<li style="color:#6c7086;font-size:13px;text-align:center;padding:20px;">タスクがありません</li>'
-        return
-    }
-    filtered.forEach(task => {
-        list.appendChild(createTaskItem(task, tasks.indexOf(task)))
-    })
-    bindTaskEvents(list)
-}
-
-// ===== タスクの描画（ドロワー） =====
-function renderDrawerTasks() {
-    const list = document.getElementById('drawer-task-list')
-    if (!list) return
-    list.innerHTML = ''
-    const filtered = tasks.filter(t => drawerFilter === 'all' || t.status === drawerFilter)
-    if (filtered.length === 0) {
-        list.innerHTML = '<li style="color:#6c7086;font-size:13px;text-align:center;padding:20px;">タスクがありません</li>'
-        return
-    }
-    filtered.forEach(task => {
-        list.appendChild(createTaskItem(task, tasks.indexOf(task)))
-    })
-    bindTaskEvents(list)
-}
-
-// ===== タスク追加（PC） =====
-document.getElementById('add-task').addEventListener('click', function () {
-    const text = document.getElementById('task-input').value.trim()
-    if (!text) return
-    tasks.push({
-        text,
-        date: document.getElementById('task-date').value,
-        status: document.getElementById('task-status').value,
-        category: document.getElementById('task-category').value
-    })
-    saveTasks(); renderTasks(); renderDrawerTasks(); renderCalendar()
-    document.getElementById('task-input').value = ''
-    document.getElementById('task-date').value = ''
-})
-
-document.getElementById('task-input').addEventListener('keydown', e => {
-    if (e.key === 'Enter') document.getElementById('add-task').click()
-})
-
-// ===== タスク追加（ドロワー） =====
-document.getElementById('drawer-add-task').addEventListener('click', function () {
-    const text = document.getElementById('drawer-task-input').value.trim()
-    if (!text) return
-    tasks.push({
-        text,
-        date: document.getElementById('drawer-task-date').value,
-        status: document.getElementById('drawer-task-status').value,
-        category: document.getElementById('drawer-task-category').value
-    })
-    saveTasks(); renderTasks(); renderDrawerTasks(); renderCalendar()
-    document.getElementById('drawer-task-input').value = ''
-    document.getElementById('drawer-task-date').value = ''
-})
-
-document.getElementById('drawer-task-input').addEventListener('keydown', e => {
-    if (e.key === 'Enter') document.getElementById('drawer-add-task').click()
-})
-
-// ===== フィルター（PC） =====
-document.querySelectorAll('.filter-btn').forEach(btn => {
-    btn.addEventListener('click', function () {
-        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'))
-        this.classList.add('active')
-        currentFilter = this.dataset.filter
-        renderTasks()
-    })
-})
-
-// ===== フィルター（ドロワー） =====
-document.querySelectorAll('.drawer-filter-btn').forEach(btn => {
-    btn.addEventListener('click', function () {
-        document.querySelectorAll('.drawer-filter-btn').forEach(b => b.classList.remove('active'))
-        this.classList.add('active')
-        drawerFilter = this.dataset.filter
-        renderDrawerTasks()
-    })
-})
-
-// ===== カレンダーの描画 =====
+// ===== カレンダー描画 =====
 function renderCalendar() {
-    const weeks = ['日', '月', '火', '水', '木', '金', '土']
-    const today = new Date()
-    const firstDay = new Date(currentYear, currentMonth, 1)
-    const lastDay = new Date(currentYear, currentMonth + 1, 0)
-    const firstDayCount = firstDay.getDay()
-    const lastDayCount = lastDay.getDate()
+  const title = document.getElementById('calendarTitle');
+  title.textContent = `${currentYear}年 ${currentMonth + 1}月`;
 
-    document.getElementById('calendar-title').textContent =
-        currentYear + '年 ' + (currentMonth + 1) + '月'
+  const container = document.getElementById('calendarDays');
+  container.innerHTML = '';
 
-    let html = '<table><thead><tr>'
-    weeks.forEach(w => { html += `<th>${w}</th>` })
-    html += '</tr></thead><tbody>'
+  const tasks = loadTasks();
+  const today = new Date(); today.setHours(0,0,0,0);
 
-    let dayCount = 1
-    for (let w = 0; w < 6; w++) {
-        html += '<tr>'
-        for (let d = 0; d < 7; d++) {
-            if ((w === 0 && d < firstDayCount) || dayCount > lastDayCount) {
-                html += '<td></td>'
-            } else {
-                const isToday = today.getFullYear() === currentYear &&
-                    today.getMonth() === currentMonth && today.getDate() === dayCount
-                const dateStr = currentYear + '-' +
-                    String(currentMonth + 1).padStart(2, '0') + '-' +
-                    String(dayCount).padStart(2, '0')
-                const dayTasks = tasks.filter(t => t.date === dateStr)
-                let dots = '<div class="day-tasks">'
-                dayTasks.slice(0, 2).forEach(t => {
-                    dots += `<div class="day-task-dot">${t.text}</div>`
-                })
-                dots += '</div>'
-                const dc = d === 0 ? 'sunday' : d === 6 ? 'saturday' : ''
-                html += `<td class="${dc} ${isToday ? 'today' : ''}" data-date="${dateStr}">
-                    <div class="day-number">${dayCount}</div>${dots}</td>`
-                dayCount++
-            }
-        }
-        html += '</tr>'
-        if (dayCount > lastDayCount) break
-    }
-    html += '</tbody></table>'
-    document.getElementById('calendar').innerHTML = html
+  const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+  const daysInPrev  = new Date(currentYear, currentMonth, 0).getDate();
 
-    document.querySelectorAll('#calendar td[data-date]').forEach(td => {
-        td.addEventListener('click', function () {
-            openDayModal(this.dataset.date)
-        })
-    })
+  // 前月の末尾
+  for (let i = firstDay - 1; i >= 0; i--) {
+    appendDay(container, daysInPrev - i, currentMonth - 1, currentYear, tasks, today, true);
+  }
+  // 当月
+  for (let d = 1; d <= daysInMonth; d++) {
+    appendDay(container, d, currentMonth, currentYear, tasks, today, false);
+  }
+  // 次月の頭（6行になるように埋める）
+  const total = firstDay + daysInMonth;
+  const remain = total % 7 === 0 ? 0 : 7 - (total % 7);
+  for (let d = 1; d <= remain; d++) {
+    appendDay(container, d, currentMonth + 1, currentYear, tasks, today, true);
+  }
 }
 
-// ===== 月の切り替え =====
-document.getElementById('prev-month').addEventListener('click', () => {
-    currentMonth--
-    if (currentMonth < 0) { currentMonth = 11; currentYear-- }
-    renderCalendar()
-})
-document.getElementById('next-month').addEventListener('click', () => {
-    currentMonth++
-    if (currentMonth > 11) { currentMonth = 0; currentYear++ }
-    renderCalendar()
-})
+function appendDay(container, day, month, year, tasks, today, otherMonth) {
+  const el = document.createElement('div');
+  el.className = 'cal-day';
 
-// ===== ドロワー開閉 =====
-function openDrawer() {
-    document.getElementById('task-drawer').classList.add('open')
-    document.getElementById('drawer-overlay').classList.add('open')
-    renderDrawerTasks()
+  // 実際の年月を計算（月はみ出し対応）
+  const realDate = new Date(year, month, day);
+  const realYear  = realDate.getFullYear();
+  const realMonth = realDate.getMonth();
+  const realDay   = realDate.getDate();
+
+  if (otherMonth) el.classList.add('other-month');
+  if (realDate.getTime() === today.getTime()) el.classList.add('today');
+  if (realDate.getDay() === 0) el.classList.add('sunday');
+  if (realDate.getDay() === 6) el.classList.add('saturday');
+
+  const dateStr = `${realYear}-${String(realMonth+1).padStart(2,'0')}-${String(realDay).padStart(2,'0')}`;
+
+  // 日番号
+  const num = document.createElement('span');
+  num.className = 'day-num';
+  num.textContent = realDay;
+  el.appendChild(num);
+
+  // その日のタスクドット
+  const dayTasks = tasks.filter(t => t.date === dateStr && t.status !== 'done');
+  if (dayTasks.length > 0) {
+    const dots = document.createElement('div');
+    dots.className = 'day-tasks';
+    dayTasks.slice(0, 4).forEach(t => {
+      const dot = document.createElement('span');
+      dot.className = 'day-task-dot';
+      dot.style.background = `var(--p-${calcPriority(t.date)})`;
+      dots.appendChild(dot);
+    });
+    el.appendChild(dots);
+  }
+
+  el.addEventListener('click', () => openModal(dateStr));
+  container.appendChild(el);
 }
 
-function closeDrawer() {
-    document.getElementById('task-drawer').classList.remove('open')
-    document.getElementById('drawer-overlay').classList.remove('open')
+// ===== タスク一覧描画 =====
+function renderTasks() {
+  const list = document.getElementById('taskList');
+  let tasks = loadTasks();
+
+  // フィルター適用
+  const filtered = tasks.filter(t => {
+    if (currentFilter === 'all')        return true;
+    if (currentFilter === 'next')       return t.status === 'next';
+    if (currentFilter === 'inprogress') return t.status === 'inprogress';
+    if (currentFilter === 'done')       return t.status === 'done';
+    return true;
+  });
+
+  list.innerHTML = '';
+  if (filtered.length === 0) {
+    list.innerHTML = '<li style="color:var(--text-muted);font-size:0.85rem;text-align:center;padding:20px 0;">タスクはありません</li>';
+    return;
+  }
+
+  filtered.forEach((task, _) => {
+    const idx = tasks.findIndex(t => t.id === task.id);
+    const p = calcPriority(task.date);
+    const li = document.createElement('li');
+    li.className = `task-item priority-${p}${task.status === 'done' ? ' done' : ''}`;
+
+    const catColors = { work:'var(--cat-work)', personal:'var(--cat-personal)', health:'var(--cat-health)', other:'var(--cat-other)' };
+    const statusLabels = { next:'Next Up', inprogress:'進行中', done:'完了' };
+    const nextStatus = { next:'inprogress', inprogress:'done', done:'next' };
+
+    li.innerHTML = `
+      <span class="task-priority-icon">${priorityIcon(p)}</span>
+      <div class="task-info">
+        <div class="task-name">${escapeHtml(task.name)}</div>
+        <div class="task-meta">
+          ${task.date ? `<span class="task-date">${task.date}</span>` : ''}
+          <span class="task-category" style="color:${catColors[task.category]||'var(--text-muted)'}">
+            ${task.category}
+          </span>
+          <button class="task-status-btn" data-idx="${idx}">${statusLabels[task.status]}</button>
+        </div>
+      </div>
+      <button class="task-delete" data-idx="${idx}">✕</button>
+    `;
+
+    // ステータス切り替え
+    li.querySelector('.task-status-btn').addEventListener('click', () => {
+      const all = loadTasks();
+      all[idx].status = nextStatus[all[idx].status];
+      saveTasks(all);
+      renderTasks();
+      renderCalendar();
+    });
+
+    // 削除
+    li.querySelector('.task-delete').addEventListener('click', () => {
+      const all = loadTasks();
+      all.splice(idx, 1);
+      saveTasks(all);
+      renderTasks();
+      renderCalendar();
+    });
+
+    list.appendChild(li);
+  });
 }
 
-document.getElementById('task-fab').addEventListener('click', openDrawer)
-document.getElementById('drawer-overlay').addEventListener('click', closeDrawer)
+// ===== タスク追加 =====
+function addTask() {
+  const nameEl = document.getElementById('taskInput');
+  const dateEl = document.getElementById('taskDate');
+  const catEl  = document.getElementById('taskCategory');
 
-// ===== 24時間表モーダル =====
-function openDayModal(dateStr) {
-    selectedDate = dateStr
-    const [y, m, d] = dateStr.split('-')
-    document.getElementById('modal-date-title').textContent =
-        y + '年' + parseInt(m) + '月' + parseInt(d) + '日'
-    renderHourlyTable(dateStr)
-    renderDayTasks(dateStr)
-    document.getElementById('day-modal').classList.remove('hidden')
+  const name = nameEl.value.trim();
+  if (!name) { nameEl.focus(); return; }
+
+  const tasks = loadTasks();
+  tasks.push({
+    id: Date.now(),
+    name,
+    date:     dateEl.value,
+    category: catEl.value,
+    status:   'next',
+  });
+  saveTasks(tasks);
+
+  nameEl.value = '';
+  dateEl.value = '';
+  renderTasks();
+  renderCalendar();
 }
 
+// ===== モーダル =====
+function openModal(dateStr) {
+  selectedDate = dateStr;
+  const overlay = document.getElementById('modalOverlay');
+  document.getElementById('modalDateTitle').textContent = formatDateJP(dateStr);
+  overlay.classList.add('active');
+  renderTimetable(dateStr);
+  renderDailyTodo(dateStr);
+}
 function closeModal() {
-    document.getElementById('day-modal').classList.add('hidden')
-    selectedDate = ''
+  document.getElementById('modalOverlay').classList.remove('active');
+  selectedDate = null;
 }
 
-function renderHourlyTable(dateStr) {
-    const saved = JSON.parse(localStorage.getItem('hourly-' + dateStr)) || {}
-    const container = document.getElementById('hourly-table')
-    container.innerHTML = ''
-    for (let h = 0; h < 24; h++) {
-        const row = document.createElement('div')
-        row.className = 'hour-row'
-        const span = document.createElement('span')
-        span.className = 'hour-label'
-        span.textContent = String(h).padStart(2, '0') + ':00'
-        const textarea = document.createElement('textarea')
-        textarea.className = 'hour-input'
-        textarea.rows = 1
-        textarea.value = saved[h] || ''
-        textarea.placeholder = '予定を入力...'
-        textarea.dataset.hour = h
-        textarea.addEventListener('input', function () {
-            const data = JSON.parse(localStorage.getItem('hourly-' + dateStr)) || {}
-            data[this.dataset.hour] = this.value
-            localStorage.setItem('hourly-' + dateStr, JSON.stringify(data))
-        })
-        row.appendChild(span)
-        row.appendChild(textarea)
-        container.appendChild(row)
-    }
+function formatDateJP(dateStr) {
+  const [y, m, d] = dateStr.split('-');
+  const days = ['日','月','火','水','木','金','土'];
+  const day  = new Date(dateStr).getDay();
+  return `${y}年${parseInt(m)}月${parseInt(d)}日 (${days[day]})`;
 }
 
-// ===== この日専用タスク（メインタスクと独立） =====
-function getDayTasks(dateStr) {
-    return JSON.parse(localStorage.getItem('daytasks-' + dateStr)) || []
+// ===== 時間割 =====
+function renderTimetable(dateStr) {
+  const container = document.getElementById('timetable');
+  container.innerHTML = '';
+  const data = load(KEYS.timetable);
+  const dayData = data[dateStr] || {};
+
+  for (let h = 0; h < 24; h++) {
+    const row = document.createElement('div');
+    row.className = 'timetable-row';
+
+    const timeLabel = document.createElement('span');
+    timeLabel.className = 'timetable-time';
+    timeLabel.textContent = `${String(h).padStart(2,'0')}:00`;
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'timetable-input';
+    input.placeholder = '予定を入力...';
+    input.value = dayData[h] || '';
+    input.addEventListener('input', () => {
+      const all = load(KEYS.timetable);
+      if (!all[dateStr]) all[dateStr] = {};
+      all[dateStr][h] = input.value;
+      save(KEYS.timetable, all);
+    });
+
+    row.appendChild(timeLabel);
+    row.appendChild(input);
+    container.appendChild(row);
+  }
 }
 
-function saveDayTasks(dateStr, list) {
-    localStorage.setItem('daytasks-' + dateStr, JSON.stringify(list))
+// ===== 日別TODOリスト =====
+function renderDailyTodo(dateStr) {
+  const list = document.getElementById('dailyTodoList');
+  list.innerHTML = '';
+  const data = load(KEYS.dailyTodo);
+  const items = data[dateStr] || [];
+
+  items.forEach((item, idx) => {
+    const li = document.createElement('li');
+    li.className = `daily-todo-item${item.checked ? ' checked' : ''}`;
+
+    const id = `dtodo-${idx}`;
+    li.innerHTML = `
+      <input type="checkbox" id="${id}" ${item.checked ? 'checked' : ''}>
+      <label for="${id}">${escapeHtml(item.text)}</label>
+      <button class="daily-todo-delete" data-idx="${idx}">✕</button>
+    `;
+
+    li.querySelector('input').addEventListener('change', e => {
+      const all = load(KEYS.dailyTodo);
+      all[dateStr][idx].checked = e.target.checked;
+      save(KEYS.dailyTodo, all);
+      renderDailyTodo(dateStr);
+    });
+    li.querySelector('.daily-todo-delete').addEventListener('click', () => {
+      const all = load(KEYS.dailyTodo);
+      all[dateStr].splice(idx, 1);
+      save(KEYS.dailyTodo, all);
+      renderDailyTodo(dateStr);
+    });
+
+    list.appendChild(li);
+  });
 }
 
-function renderDayTasks(dateStr) {
-    const list = document.getElementById('day-task-list')
-    list.innerHTML = ''
-    const dayTasks = getDayTasks(dateStr)
-    if (dayTasks.length === 0) {
-        list.innerHTML = '<li style="color:#6c7086;font-size:12px;text-align:center;padding:16px;">タスクなし</li>'
-        return
-    }
-    dayTasks.forEach((task, i) => {
-        const li = document.createElement('li')
-        li.className = 'day-task-item' + (task.done ? ' done' : '')
-        li.innerHTML = `
-            <input type="checkbox" class="day-check" data-index="${i}" ${task.done ? 'checked' : ''}>
-            <span style="flex:1;${task.done ? 'text-decoration:line-through;color:#6c7086' : ''}">${task.text}</span>
-            <button class="day-delete-btn" data-index="${i}">🗑</button>`
-        list.appendChild(li)
-    })
-    list.querySelectorAll('.day-check').forEach(cb => {
-        cb.addEventListener('change', function () {
-            const dt = getDayTasks(dateStr)
-            dt[parseInt(this.dataset.index)].done = this.checked
-            saveDayTasks(dateStr, dt)
-            renderDayTasks(dateStr)
-        })
-    })
-    list.querySelectorAll('.day-delete-btn').forEach(btn => {
-        btn.addEventListener('click', function () {
-            const dt = getDayTasks(dateStr)
-            dt.splice(parseInt(this.dataset.index), 1)
-            saveDayTasks(dateStr, dt)
-            renderDayTasks(dateStr)
-        })
-    })
+function addDailyTodo() {
+  const input = document.getElementById('dailyTodoInput');
+  const text = input.value.trim();
+  if (!text || !selectedDate) return;
+
+  const all = load(KEYS.dailyTodo);
+  if (!all[selectedDate]) all[selectedDate] = [];
+  all[selectedDate].push({ text, checked: false });
+  save(KEYS.dailyTodo, all);
+  input.value = '';
+  renderDailyTodo(selectedDate);
 }
 
-document.getElementById('day-add-task').addEventListener('click', function () {
-    const text = document.getElementById('day-task-input').value.trim()
-    if (!text || !selectedDate) return
-    const dt = getDayTasks(selectedDate)
-    dt.push({ text, done: false })
-    saveDayTasks(selectedDate, dt)
-    renderDayTasks(selectedDate)
-    document.getElementById('day-task-input').value = ''
-})
+// ===== ドロワー =====
+function openDrawer() {
+  document.getElementById('taskDrawer').classList.add('open');
+  document.getElementById('drawerOverlay').classList.add('active');
+}
+function closeDrawer() {
+  document.getElementById('taskDrawer').classList.remove('open');
+  document.getElementById('drawerOverlay').classList.remove('active');
+}
 
-document.getElementById('day-task-input').addEventListener('keydown', e => {
-    if (e.key === 'Enter') document.getElementById('day-add-task').click()
-})
+// ===== XSS対策 =====
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
+}
 
-document.getElementById('modal-close').addEventListener('click', closeModal)
-document.getElementById('day-modal').addEventListener('click', function (e) {
-    if (e.target === this) closeModal()
-})
+// ===== イベント登録 =====
+document.getElementById('prevMonth').addEventListener('click', () => {
+  currentMonth--;
+  if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+  renderCalendar();
+});
+document.getElementById('nextMonth').addEventListener('click', () => {
+  currentMonth++;
+  if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+  renderCalendar();
+});
 
-// ===== 初期表示 =====
-renderTasks()
-renderCalendar()
+document.getElementById('addTask').addEventListener('click', addTask);
+document.getElementById('taskInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') addTask();
+});
+
+document.querySelectorAll('.filter-tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentFilter = btn.dataset.filter;
+    renderTasks();
+  });
+});
+
+document.getElementById('drawerToggle').addEventListener('click', openDrawer);
+document.getElementById('drawerClose').addEventListener('click', closeDrawer);
+document.getElementById('drawerOverlay').addEventListener('click', closeDrawer);
+
+document.getElementById('modalClose').addEventListener('click', closeModal);
+document.getElementById('modalOverlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('modalOverlay')) closeModal();
+});
+
+document.getElementById('addDailyTodo').addEventListener('click', addDailyTodo);
+document.getElementById('dailyTodoInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') addDailyTodo();
+});
+
+// ===== 初期化 =====
+updateHeaderDate();
+renderCalendar();
+renderTasks();
+
+// PWA: Service Worker登録
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
