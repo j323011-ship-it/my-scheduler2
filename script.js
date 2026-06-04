@@ -1,8 +1,3 @@
-// ===== PWA Service Worker 登録 =====
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js')
-}
-
 // ===== データ管理 =====
 let tasks = JSON.parse(localStorage.getItem('tasks')) || []
 let currentYear = new Date().getFullYear()
