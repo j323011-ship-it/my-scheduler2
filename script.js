@@ -26,29 +26,6 @@ function saveTasks() {
     localStorage.setItem('tasks', JSON.stringify(tasks))
 }
 
-// ===== タスクアイテムのHTML生成（共通） =====
-function createTaskItem(task, realIndex) {
-    const li = document.createElement('li')
-    li.className = 'task-item' + (task.status === 'Done' ? ' done' : '')
-    const priority = calcPriority(task.date, task.status)
-    li.innerHTML = `
-        <div class="task-top">
-            <span class="task-name">${task.text}</span>
-            <button class="delete-btn" data-index="${realIndex}">🗑</button>
-        </div>
-        <div class="task-meta">
-            <span class="task-priority">${priority}</span>
-            <span class="task-category">${task.category}</span>
-            ${task.date ? `<span class="task-date-label">📅 ${task.date}</span>` : ''}
-            <select class="task-status-select" data-index="${realIndex}">
-                <option value="Next Up" ${task.status === 'Next Up' ? 'selected' : ''}>Next Up</option>
-                <option value="In Progress" ${task.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
-                <option value="Done" ${task.status === 'Done' ? 'selected' : ''}>Done</option>
-            </select>
-        </div>`
-    return li
-}
-
 // ===== タスクの描画（PCパネル） =====
 function renderTasks() {
     const list = document.getElementById('task-list')
