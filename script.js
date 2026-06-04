@@ -54,24 +54,6 @@ function createTaskItem(task, realIndex) {
     return li
 }
 
-// ===== タスクイベントのバインド =====
-function bindTaskEvents(container) {
-    container.querySelectorAll('.delete-btn').forEach(btn => {
-        btn.addEventListener('click', function () {
-            tasks.splice(parseInt(this.dataset.index), 1)
-            saveTasks(); renderTasks(); renderDrawerTasks(); renderCalendar()
-        })
-    })
-    container.querySelectorAll('.task-status-select').forEach(sel => {
-        sel.addEventListener('change', function () {
-            const i = parseInt(this.dataset.index)
-            tasks[i].status = this.value
-            if (this.value === 'Done') tasks[i].completedDate = new Date().toISOString().split('T')[0]
-            saveTasks(); renderTasks(); renderDrawerTasks(); renderCalendar()
-        })
-    })
-}
-
 // ===== タスクの描画（PCパネル） =====
 function renderTasks() {
     const list = document.getElementById('task-list')
