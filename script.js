@@ -88,21 +88,7 @@ function renderTasks() {
     bindTaskEvents(list)
 }
 
-// ===== タスクの描画（ドロワー） =====
-function renderDrawerTasks() {
-    const list = document.getElementById('drawer-task-list')
-    if (!list) return
-    list.innerHTML = ''
-    const filtered = tasks.filter(t => drawerFilter === 'all' || t.status === drawerFilter)
-    if (filtered.length === 0) {
-        list.innerHTML = '<li style="color:#6c7086;font-size:13px;text-align:center;padding:20px;">タスクがありません</li>'
-        return
-    }
-    filtered.forEach(task => {
-        list.appendChild(createTaskItem(task, tasks.indexOf(task)))
-    })
-    bindTaskEvents(list)
-}
+
 
 // ===== タスク追加（PC） =====
 document.getElementById('add-task').addEventListener('click', function () {
@@ -123,25 +109,6 @@ document.getElementById('task-input').addEventListener('keydown', e => {
     if (e.key === 'Enter') document.getElementById('add-task').click()
 })
 
-// ===== タスク追加（ドロワー） =====
-document.getElementById('drawer-add-task').addEventListener('click', function () {
-    const text = document.getElementById('drawer-task-input').value.trim()
-    if (!text) return
-    tasks.push({
-        text,
-        date: document.getElementById('drawer-task-date').value,
-        status: document.getElementById('drawer-task-status').value,
-        category: document.getElementById('drawer-task-category').value
-    })
-    saveTasks(); renderTasks(); renderDrawerTasks(); renderCalendar()
-    document.getElementById('drawer-task-input').value = ''
-    document.getElementById('drawer-task-date').value = ''
-})
-
-document.getElementById('drawer-task-input').addEventListener('keydown', e => {
-    if (e.key === 'Enter') document.getElementById('drawer-add-task').click()
-})
-
 // ===== フィルター（PC） =====
 document.querySelectorAll('.filter-btn').forEach(btn => {
     btn.addEventListener('click', function () {
@@ -152,15 +119,7 @@ document.querySelectorAll('.filter-btn').forEach(btn => {
     })
 })
 
-// ===== フィルター（ドロワー） =====
-document.querySelectorAll('.drawer-filter-btn').forEach(btn => {
-    btn.addEventListener('click', function () {
-        document.querySelectorAll('.drawer-filter-btn').forEach(b => b.classList.remove('active'))
-        this.classList.add('active')
-        drawerFilter = this.dataset.filter
-        renderDrawerTasks()
-    })
-})
+
 
 // ===== カレンダーの描画 =====
 function renderCalendar() {
