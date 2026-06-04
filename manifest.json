@@ -1,12 +1,12 @@
 {
-  "name": "スケジュール管理",
-  "short_name": "スケジュール",
-  "description": "タスクとカレンダーのスケジュール管理アプリ",
+  "name": "スケジューラー",
+  "short_name": "Scheduler",
+  "description": "タスク管理 × カレンダー スケジューラー",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#1e1e2e",
-  "theme_color": "#cba6f7",
-  "orientation": "portrait",
+  "background_color": "#0f0f1a",
+  "theme_color": "#1a1a2e",
+  "orientation": "portrait-primary",
   "icons": [
     {
       "src": "icon-192.png",
