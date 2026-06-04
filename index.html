@@ -2,18 +2,24 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#cba6f7">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="スケジュール">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
     <title>スケジュール管理</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
     <div id="container">
 
-        <!-- 左側：タスクリスト -->
+        <!-- 左側：タスクリスト（PC用） -->
         <div id="task-panel">
             <h2>📋 タスクリスト</h2>
-
-            <!-- タスク入力エリア -->
             <div id="task-input-area">
                 <input type="text" id="task-input" placeholder="タスクを入力...">
                 <input type="date" id="task-date">
@@ -29,16 +35,12 @@
                 </select>
                 <button id="add-task">追加</button>
             </div>
-
-            <!-- フィルター -->
             <div id="filter-area">
                 <button class="filter-btn active" data-filter="all">すべて</button>
                 <button class="filter-btn" data-filter="Next Up">Next Up</button>
                 <button class="filter-btn" data-filter="In Progress">In Progress</button>
                 <button class="filter-btn" data-filter="Done">Done</button>
             </div>
-
-            <!-- タスク一覧 -->
             <ul id="task-list"></ul>
         </div>
 
@@ -48,12 +50,45 @@
                 <button id="prev-month">＜</button>
                 <span id="calendar-title"></span>
                 <button id="next-month">＞</button>
-                <button id="task-fab">📋</button>
             </div>
             <div id="calendar"></div>
         </div>
 
     </div>
+
+    <!-- スマホ用：タスクドロワー -->
+    <div id="drawer-overlay" class="hidden"></div>
+    <div id="task-drawer">
+        <div id="drawer-handle"></div>
+        <div id="drawer-inner">
+            <h2>📋 タスクリスト</h2>
+            <div id="drawer-input-area">
+                <input type="text" id="drawer-task-input" placeholder="タスクを入力...">
+                <input type="date" id="drawer-task-date">
+                <select id="drawer-task-status">
+                    <option value="Next Up">Next Up</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Done">Done</option>
+                </select>
+                <select id="drawer-task-category">
+                    <option value="仕事">仕事</option>
+                    <option value="学習">学習</option>
+                    <option value="プライベート">プライベート</option>
+                </select>
+                <button id="drawer-add-task">追加</button>
+            </div>
+            <div id="drawer-filter-area">
+                <button class="drawer-filter-btn active" data-filter="all">すべて</button>
+                <button class="drawer-filter-btn" data-filter="Next Up">Next Up</button>
+                <button class="drawer-filter-btn" data-filter="In Progress">In Progress</button>
+                <button class="drawer-filter-btn" data-filter="Done">Done</button>
+            </div>
+            <ul id="drawer-task-list"></ul>
+        </div>
+    </div>
+
+    <!-- スマホ用：タスクボタン -->
+    <button id="task-fab">📋</button>
 
     <!-- 24時間表モーダル -->
     <div id="day-modal" class="modal-overlay hidden">
@@ -63,12 +98,10 @@
                 <button id="modal-close">✕</button>
             </div>
             <div class="modal-body">
-                <!-- 左：24時間表 -->
                 <div id="hourly-panel">
                     <h3>🕐 時間割</h3>
                     <div id="hourly-table"></div>
                 </div>
-                <!-- 右：その日のタスク -->
                 <div id="day-task-panel">
                     <h3>📋 この日のタスク</h3>
                     <ul id="day-task-list"></ul>
