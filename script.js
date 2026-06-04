@@ -1,8 +1,14 @@
+// ===== PWA Service Worker 登録 =====
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js')
+}
+
 // ===== データ管理 =====
 let tasks = JSON.parse(localStorage.getItem('tasks')) || []
 let currentYear = new Date().getFullYear()
 let currentMonth = new Date().getMonth()
 let currentFilter = 'all'
+let drawerFilter = 'all'
 let selectedDate = ''
 
 // ===== 優先度の自動計算 =====
@@ -21,95 +27,140 @@ function calcPriority(dateStr, status) {
     return '🟢 余裕あり'
 }
 
-// ===== タスクの保存 =====
 function saveTasks() {
     localStorage.setItem('tasks', JSON.stringify(tasks))
 }
 
-// ===== タスクの描画 =====
+// ===== タスクアイテムのHTML生成（共通） =====
+function createTaskItem(task, realIndex) {
+    const li = document.createElement('li')
+    li.className = 'task-item' + (task.status === 'Done' ? ' done' : '')
+    const priority = calcPriority(task.date, task.status)
+    li.innerHTML = `
+        <div class="task-top">
+            <span class="task-name">${task.text}</span>
+            <button class="delete-btn" data-index="${realIndex}">🗑</button>
+        </div>
+        <div class="task-meta">
+            <span class="task-priority">${priority}</span>
+            <span class="task-category">${task.category}</span>
+            ${task.date ? `<span class="task-date-label">📅 ${task.date}</span>` : ''}
+            <select class="task-status-select" data-index="${realIndex}">
+                <option value="Next Up" ${task.status === 'Next Up' ? 'selected' : ''}>Next Up</option>
+                <option value="In Progress" ${task.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
+                <option value="Done" ${task.status === 'Done' ? 'selected' : ''}>Done</option>
+            </select>
+        </div>`
+    return li
+}
+
+// ===== タスクの描画（PCパネル） =====
 function renderTasks() {
     const list = document.getElementById('task-list')
+    if (!list) return
     list.innerHTML = ''
-    const filtered = tasks.filter(task => {
-        if (currentFilter === 'all') return true
-        return task.status === currentFilter
-    })
+    const filtered = tasks.filter(t => currentFilter === 'all' || t.status === currentFilter)
     if (filtered.length === 0) {
-        list.innerHTML = '<li style="color:#6c7086; font-size:13px; text-align:center; padding:20px;">タスクがありません</li>'
+        list.innerHTML = '<li style="color:#6c7086;font-size:13px;text-align:center;padding:20px;">タスクがありません</li>'
         return
     }
-    filtered.forEach((task) => {
-        const realIndex = tasks.indexOf(task)
-        const li = document.createElement('li')
-        li.className = 'task-item' + (task.status === 'Done' ? ' done' : '')
-        const priority = calcPriority(task.date, task.status)
-        li.innerHTML = `
-            <div class="task-top">
-                <span class="task-name">${task.text}</span>
-                <button class="delete-btn" data-index="${realIndex}">🗑</button>
-            </div>
-            <div class="task-meta">
-                <span class="task-priority">${priority}</span>
-                <span class="task-category">${task.category}</span>
-                ${task.date ? `<span class="task-date-label">📅 ${task.date}</span>` : ''}
-                <select class="task-status-select" data-index="${realIndex}">
-                    <option value="Next Up" ${task.status === 'Next Up' ? 'selected' : ''}>Next Up</option>
-                    <option value="In Progress" ${task.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
-                    <option value="Done" ${task.status === 'Done' ? 'selected' : ''}>Done</option>
-                </select>
-            </div>
-        `
+    filtered.forEach(task => {
+        const li = createTaskItem(task, tasks.indexOf(task))
         list.appendChild(li)
     })
-    document.querySelectorAll('.delete-btn').forEach(btn => {
+    bindTaskEvents(list)
+}
+
+// ===== タスクの描画（ドロワー） =====
+function renderDrawerTasks() {
+    const list = document.getElementById('drawer-task-list')
+    if (!list) return
+    list.innerHTML = ''
+    const filtered = tasks.filter(t => drawerFilter === 'all' || t.status === drawerFilter)
+    if (filtered.length === 0) {
+        list.innerHTML = '<li style="color:#6c7086;font-size:13px;text-align:center;padding:20px;">タスクがありません</li>'
+        return
+    }
+    filtered.forEach(task => {
+        const li = createTaskItem(task, tasks.indexOf(task))
+        list.appendChild(li)
+    })
+    bindTaskEvents(list)
+}
+
+// ===== タスクイベントのバインド =====
+function bindTaskEvents(container) {
+    container.querySelectorAll('.delete-btn').forEach(btn => {
         btn.addEventListener('click', function () {
-            const i = parseInt(this.dataset.index)
-            tasks.splice(i, 1)
-            saveTasks()
-            renderTasks()
-            renderCalendar()
+            tasks.splice(parseInt(this.dataset.index), 1)
+            saveTasks(); renderTasks(); renderDrawerTasks(); renderCalendar()
         })
     })
-    document.querySelectorAll('.task-status-select').forEach(sel => {
+    container.querySelectorAll('.task-status-select').forEach(sel => {
         sel.addEventListener('change', function () {
             const i = parseInt(this.dataset.index)
             tasks[i].status = this.value
-            if (this.value === 'Done') {
-                tasks[i].completedDate = new Date().toISOString().split('T')[0]
-            }
-            saveTasks()
-            renderTasks()
-            renderCalendar()
+            if (this.value === 'Done') tasks[i].completedDate = new Date().toISOString().split('T')[0]
+            saveTasks(); renderTasks(); renderDrawerTasks(); renderCalendar()
         })
     })
 }
 
-// ===== タスク追加 =====
+// ===== タスク追加（PC） =====
 document.getElementById('add-task').addEventListener('click', function () {
     const text = document.getElementById('task-input').value.trim()
-    const date = document.getElementById('task-date').value
-    const status = document.getElementById('task-status').value
-    const category = document.getElementById('task-category').value
-    if (text === '') return
-    tasks.push({ text, date, status, category })
-    saveTasks()
-    renderTasks()
-    renderCalendar()
+    if (!text) return
+    tasks.push({
+        text,
+        date: document.getElementById('task-date').value,
+        status: document.getElementById('task-status').value,
+        category: document.getElementById('task-category').value
+    })
+    saveTasks(); renderTasks(); renderDrawerTasks(); renderCalendar()
     document.getElementById('task-input').value = ''
     document.getElementById('task-date').value = ''
 })
 
-document.getElementById('task-input').addEventListener('keydown', function (e) {
+document.getElementById('task-input').addEventListener('keydown', e => {
     if (e.key === 'Enter') document.getElementById('add-task').click()
 })
 
-// ===== フィルター =====
+// ===== タスク追加（ドロワー） =====
+document.getElementById('drawer-add-task').addEventListener('click', function () {
+    const text = document.getElementById('drawer-task-input').value.trim()
+    if (!text) return
+    tasks.push({
+        text,
+        date: document.getElementById('drawer-task-date').value,
+        status: document.getElementById('drawer-task-status').value,
+        category: document.getElementById('drawer-task-category').value
+    })
+    saveTasks(); renderTasks(); renderDrawerTasks(); renderCalendar()
+    document.getElementById('drawer-task-input').value = ''
+    document.getElementById('drawer-task-date').value = ''
+})
+
+document.getElementById('drawer-task-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('drawer-add-task').click()
+})
+
+// ===== フィルター（PC） =====
 document.querySelectorAll('.filter-btn').forEach(btn => {
     btn.addEventListener('click', function () {
         document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'))
         this.classList.add('active')
         currentFilter = this.dataset.filter
         renderTasks()
+    })
+})
+
+// ===== フィルター（ドロワー） =====
+document.querySelectorAll('.drawer-filter-btn').forEach(btn => {
+    btn.addEventListener('click', function () {
+        document.querySelectorAll('.drawer-filter-btn').forEach(b => b.classList.remove('active'))
+        this.classList.add('active')
+        drawerFilter = this.dataset.filter
+        renderDrawerTasks()
     })
 })
 
@@ -136,25 +187,20 @@ function renderCalendar() {
             if ((w === 0 && d < firstDayCount) || dayCount > lastDayCount) {
                 html += '<td></td>'
             } else {
-                const isToday =
-                    today.getFullYear() === currentYear &&
-                    today.getMonth() === currentMonth &&
-                    today.getDate() === dayCount
+                const isToday = today.getFullYear() === currentYear &&
+                    today.getMonth() === currentMonth && today.getDate() === dayCount
                 const dateStr = currentYear + '-' +
                     String(currentMonth + 1).padStart(2, '0') + '-' +
                     String(dayCount).padStart(2, '0')
                 const dayTasks = tasks.filter(t => t.date === dateStr)
-                let dotsHTML = '<div class="day-tasks">'
-                dayTasks.slice(0, 3).forEach(t => {
-                    dotsHTML += `<div class="day-task-dot">${t.text}</div>`
+                let dots = '<div class="day-tasks">'
+                dayTasks.slice(0, 2).forEach(t => {
+                    dots += `<div class="day-task-dot">${t.text}</div>`
                 })
-                dotsHTML += '</div>'
-                const dayClass = d === 0 ? 'sunday' : d === 6 ? 'saturday' : ''
-                const todayClass = isToday ? 'today' : ''
-                html += `<td class="${dayClass} ${todayClass}" data-date="${dateStr}">
-                    <div class="day-number">${dayCount}</div>
-                    ${dotsHTML}
-                </td>`
+                dots += '</div>'
+                const dc = d === 0 ? 'sunday' : d === 6 ? 'saturday' : ''
+                html += `<td class="${dc} ${isToday ? 'today' : ''}" data-date="${dateStr}">
+                    <div class="day-number">${dayCount}</div>${dots}</td>`
                 dayCount++
             }
         }
@@ -164,7 +210,6 @@ function renderCalendar() {
     html += '</tbody></table>'
     document.getElementById('calendar').innerHTML = html
 
-    // 日付クリックでモーダルを開く
     document.querySelectorAll('#calendar td[data-date]').forEach(td => {
         td.addEventListener('click', function () {
             openDayModal(this.dataset.date)
@@ -173,16 +218,31 @@ function renderCalendar() {
 }
 
 // ===== 月の切り替え =====
-document.getElementById('prev-month').addEventListener('click', function () {
+document.getElementById('prev-month').addEventListener('click', () => {
     currentMonth--
     if (currentMonth < 0) { currentMonth = 11; currentYear-- }
     renderCalendar()
 })
-document.getElementById('next-month').addEventListener('click', function () {
+document.getElementById('next-month').addEventListener('click', () => {
     currentMonth++
     if (currentMonth > 11) { currentMonth = 0; currentYear++ }
     renderCalendar()
 })
+
+// ===== ドロワー開閉 =====
+function openDrawer() {
+    document.getElementById('task-drawer').classList.add('open')
+    document.getElementById('drawer-overlay').classList.add('open')
+    renderDrawerTasks()
+}
+
+function closeDrawer() {
+    document.getElementById('task-drawer').classList.remove('open')
+    document.getElementById('drawer-overlay').classList.remove('open')
+}
+
+document.getElementById('task-fab').addEventListener('click', openDrawer)
+document.getElementById('drawer-overlay').addEventListener('click', closeDrawer)
 
 // ===== 24時間表モーダル =====
 function openDayModal(dateStr) {
@@ -200,18 +260,16 @@ function closeModal() {
     selectedDate = ''
 }
 
-// 24時間表の描画
 function renderHourlyTable(dateStr) {
     const saved = JSON.parse(localStorage.getItem('hourly-' + dateStr)) || {}
     const container = document.getElementById('hourly-table')
     container.innerHTML = ''
     for (let h = 0; h < 24; h++) {
-        const label = String(h).padStart(2, '0') + ':00'
         const row = document.createElement('div')
         row.className = 'hour-row'
         const span = document.createElement('span')
         span.className = 'hour-label'
-        span.textContent = label
+        span.textContent = String(h).padStart(2, '0') + ':00'
         const textarea = document.createElement('textarea')
         textarea.className = 'hour-input'
         textarea.rows = 1
@@ -229,54 +287,64 @@ function renderHourlyTable(dateStr) {
     }
 }
 
-// この日のタスク表示
+// その日専用タスクの保存・読み込み
+function getDayTasks(dateStr) {
+    return JSON.parse(localStorage.getItem('daytasks-' + dateStr)) || []
+}
+
+function saveDayTasks(dateStr, list) {
+    localStorage.setItem('daytasks-' + dateStr, JSON.stringify(list))
+}
+
 function renderDayTasks(dateStr) {
     const list = document.getElementById('day-task-list')
     list.innerHTML = ''
-    const dayTasks = tasks.filter(t => t.date === dateStr)
+    const dayTasks = getDayTasks(dateStr)
     if (dayTasks.length === 0) {
-        list.innerHTML = '<li style="color:#6c7086; font-size:12px; text-align:center; padding:16px;">タスクなし</li>'
+        list.innerHTML = '<li style="color:#6c7086;font-size:12px;text-align:center;padding:16px;">タスクなし</li>'
         return
     }
-    dayTasks.forEach(task => {
-        const realIndex = tasks.indexOf(task)
+    dayTasks.forEach((task, i) => {
         const li = document.createElement('li')
-        li.className = 'day-task-item'
+        li.className = 'day-task-item' + (task.done ? ' done' : '')
         li.innerHTML = `
-            <span style="flex:1">${task.text}</span>
-            <button class="day-delete-btn" data-index="${realIndex}">🗑</button>
-        `
+            <input type="checkbox" class="day-check" data-index="${i}" ${task.done ? 'checked' : ''}>
+            <span style="flex:1;${task.done ? 'text-decoration:line-through;color:#6c7086' : ''}">${task.text}</span>
+            <button class="day-delete-btn" data-index="${i}">🗑</button>`
         list.appendChild(li)
     })
-    document.querySelectorAll('.day-delete-btn').forEach(btn => {
-        btn.addEventListener('click', function () {
-            const i = parseInt(this.dataset.index)
-            tasks.splice(i, 1)
-            saveTasks()
+    list.querySelectorAll('.day-check').forEach(cb => {
+        cb.addEventListener('change', function () {
+            const dt = getDayTasks(dateStr)
+            dt[parseInt(this.dataset.index)].done = this.checked
+            saveDayTasks(dateStr, dt)
             renderDayTasks(dateStr)
-            renderTasks()
-            renderCalendar()
+        })
+    })
+    list.querySelectorAll('.day-delete-btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+            const dt = getDayTasks(dateStr)
+            dt.splice(parseInt(this.dataset.index), 1)
+            saveDayTasks(dateStr, dt)
+            renderDayTasks(dateStr)
         })
     })
 }
 
-// この日にタスクを追加
 document.getElementById('day-add-task').addEventListener('click', function () {
     const text = document.getElementById('day-task-input').value.trim()
     if (!text || !selectedDate) return
-    tasks.push({ text, date: selectedDate, status: 'Next Up', category: 'プライベート' })
-    saveTasks()
+    const dt = getDayTasks(selectedDate)
+    dt.push({ text, done: false })
+    saveDayTasks(selectedDate, dt)
     renderDayTasks(selectedDate)
-    renderTasks()
-    renderCalendar()
     document.getElementById('day-task-input').value = ''
 })
 
-document.getElementById('day-task-input').addEventListener('keydown', function (e) {
+document.getElementById('day-task-input').addEventListener('keydown', e => {
     if (e.key === 'Enter') document.getElementById('day-add-task').click()
 })
 
-// モーダルを閉じる
 document.getElementById('modal-close').addEventListener('click', closeModal)
 document.getElementById('day-modal').addEventListener('click', function (e) {
     if (e.target === this) closeModal()
