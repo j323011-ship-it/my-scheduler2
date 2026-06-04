@@ -1,3 +1,8 @@
+// ===== PWA Service Worker 登録 =====
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js')
+}
+
 // ===== データ管理 =====
 let tasks = JSON.parse(localStorage.getItem('tasks')) || []
 let currentYear = new Date().getFullYear()
@@ -26,6 +31,47 @@ function saveTasks() {
     localStorage.setItem('tasks', JSON.stringify(tasks))
 }
 
+// ===== タスクアイテムのHTML生成（共通） =====
+function createTaskItem(task, realIndex) {
+    const li = document.createElement('li')
+    li.className = 'task-item' + (task.status === 'Done' ? ' done' : '')
+    const priority = calcPriority(task.date, task.status)
+    li.innerHTML = `
+        <div class="task-top">
+            <span class="task-name">${task.text}</span>
+            <button class="delete-btn" data-index="${realIndex}">🗑</button>
+        </div>
+        <div class="task-meta">
+            <span class="task-priority">${priority}</span>
+            <span class="task-category">${task.category}</span>
+            ${task.date ? `<span class="task-date-label">📅 ${task.date}</span>` : ''}
+            <select class="task-status-select" data-index="${realIndex}">
+                <option value="Next Up" ${task.status === 'Next Up' ? 'selected' : ''}>Next Up</option>
+                <option value="In Progress" ${task.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
+                <option value="Done" ${task.status === 'Done' ? 'selected' : ''}>Done</option>
+            </select>
+        </div>`
+    return li
+}
+
+// ===== タスクイベントのバインド =====
+function bindTaskEvents(container) {
+    container.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+            tasks.splice(parseInt(this.dataset.index), 1)
+            saveTasks(); renderTasks(); renderDrawerTasks(); renderCalendar()
+        })
+    })
+    container.querySelectorAll('.task-status-select').forEach(sel => {
+        sel.addEventListener('change', function () {
+            const i = parseInt(this.dataset.index)
+            tasks[i].status = this.value
+            if (this.value === 'Done') tasks[i].completedDate = new Date().toISOString().split('T')[0]
+            saveTasks(); renderTasks(); renderDrawerTasks(); renderCalendar()
+        })
+    })
+}
+
 // ===== タスクの描画（PCパネル） =====
 function renderTasks() {
     const list = document.getElementById('task-list')
@@ -42,7 +88,21 @@ function renderTasks() {
     bindTaskEvents(list)
 }
 
-
+// ===== タスクの描画（ドロワー） =====
+function renderDrawerTasks() {
+    const list = document.getElementById('drawer-task-list')
+    if (!list) return
+    list.innerHTML = ''
+    const filtered = tasks.filter(t => drawerFilter === 'all' || t.status === drawerFilter)
+    if (filtered.length === 0) {
+        list.innerHTML = '<li style="color:#6c7086;font-size:13px;text-align:center;padding:20px;">タスクがありません</li>'
+        return
+    }
+    filtered.forEach(task => {
+        list.appendChild(createTaskItem(task, tasks.indexOf(task)))
+    })
+    bindTaskEvents(list)
+}
 
 // ===== タスク追加（PC） =====
 document.getElementById('add-task').addEventListener('click', function () {
@@ -63,6 +123,25 @@ document.getElementById('task-input').addEventListener('keydown', e => {
     if (e.key === 'Enter') document.getElementById('add-task').click()
 })
 
+// ===== タスク追加（ドロワー） =====
+document.getElementById('drawer-add-task').addEventListener('click', function () {
+    const text = document.getElementById('drawer-task-input').value.trim()
+    if (!text) return
+    tasks.push({
+        text,
+        date: document.getElementById('drawer-task-date').value,
+        status: document.getElementById('drawer-task-status').value,
+        category: document.getElementById('drawer-task-category').value
+    })
+    saveTasks(); renderTasks(); renderDrawerTasks(); renderCalendar()
+    document.getElementById('drawer-task-input').value = ''
+    document.getElementById('drawer-task-date').value = ''
+})
+
+document.getElementById('drawer-task-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('drawer-add-task').click()
+})
+
 // ===== フィルター（PC） =====
 document.querySelectorAll('.filter-btn').forEach(btn => {
     btn.addEventListener('click', function () {
@@ -73,7 +152,15 @@ document.querySelectorAll('.filter-btn').forEach(btn => {
     })
 })
 
-
+// ===== フィルター（ドロワー） =====
+document.querySelectorAll('.drawer-filter-btn').forEach(btn => {
+    btn.addEventListener('click', function () {
+        document.querySelectorAll('.drawer-filter-btn').forEach(b => b.classList.remove('active'))
+        this.classList.add('active')
+        drawerFilter = this.dataset.filter
+        renderDrawerTasks()
+    })
+})
 
 // ===== カレンダーの描画 =====
 function renderCalendar() {
